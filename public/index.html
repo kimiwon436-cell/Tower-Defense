@@ -159,11 +159,10 @@
             <div class="hotbar-slot" data-index="4"><span class="slot-num">5</span><img src="assets/images/Sniper.png" alt="Sniper"><div class="hotbar-cost">250G</div></div>
         </div>
         <p style="font-size: 10px; color: #aaa; margin: 3px 0;">
-            🟨 좌상단: 소환소 | 🟩 우상단: 파티 | 🟪 좌하단: 인벤토리 | 🟥 우하단: 랭킹
+            🟨 좌상단: 소환소 | 🟧 중앙좌측: 거래소 | 🟩 우상단: 파티 | 🟪 좌하단: 인벤토리 | 🟥 우하단: 랭킹
         </p>
     </div>
 
-    <!-- 추가된 플레이어 정보 모달 -->
     <div id="playerInfoModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 300px;">
             <button class="close-modal" onclick="closeModals()">✕</button>
@@ -177,20 +176,33 @@
         </div>
     </div>
 
-    <!-- 추가된 거래 모달 -->
     <div id="tradeModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 320px;">
-            <button class="close-modal" onclick="closeModals()">✕</button>
-            <h3>🤝 플레이어 간 거래</h3>
-            <div id="tradeContentArea">
-                <p style="font-size:11px;">상대방과 코인 및 아이템을 교환합니다.</p>
-                <label style="font-size:11px;">제안할 코인:</label>
-                <input type="number" id="tradeOfferCoins" value="0" style="width:100%;">
-                <label style="font-size:11px; margin-top:4px; display:block;">제안할 아이템 (인벤토리에서 선택):</label>
-                <select id="tradeOfferItemSelect" style="width:100%;"></select>
-                <button id="sendTradeOfferBtn" style="background:#2e7d32; width:100%; margin-top:8px;">거래 제안 전송</button>
+      <div class="modal-content" style="max-width: 500px; text-align: left;">
+        <button class="close-modal" onclick="closeModals()">✕</button>
+        <h3 style="text-align: center;">🤝 1:1 플레이어 거래</h3>
+        
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <!-- 내 오퍼 영역 -->
+            <div style="flex: 1; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px;">
+                <h4 style="margin: 0 0 4px 0; color: #4da6ff; text-align: center; font-size: 12px;">Your Offer</h4>
+                <label style="font-size: 10px;">코인 제안:</label>
+                <input type="number" id="tradeOfferCoins" value="0" style="width:100%; margin-bottom:6px;">
+                <label style="font-size: 10px;">아이템 제안 (인벤토리):</label>
+                <select id="tradeOfferItemSelect" style="width:100%; font-size:10px;"></select>
+            </div>
+
+            <!-- 상대방 오퍼 영역 -->
+            <div style="flex: 1; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px;">
+                <h4 id="tradeTargetTitle" style="margin: 0 0 4px 0; color: #ff9800; text-align: center; font-size: 12px;">Target Offer</h4>
+                <p id="targetOfferDesc" style="font-size: 11px; margin: 4px 0; color: #ddd;">상대방이 제시하는 중...</p>
             </div>
         </div>
+
+        <div style="display: flex; gap: 6px; margin-top: 10px;">
+            <button id="sendTradeOfferBtn" style="background:#2e7d32; flex:1; padding:8px;">거래 제안 / 수락</button>
+            <button onclick="closeModals()" style="background:#d32f2f; flex:1; padding:8px;">거절 / 취소</button>
+        </div>
+      </div>
     </div>
 
     <div id="summonModal" class="modal-overlay">
@@ -331,10 +343,13 @@
         const lobbyPlayer = { x: 520, y: 340, width: 28, height: 38, speed: 4, color: '#ff4081' };
         
         const interactiveZones = [
-            { x: 15, y: 15, width: 80, height: 80, color: '#ffd700', label: 'SUMMON', action: () => openModal('summonModal') },
-            { x: 985, y: 15, width: 80, height: 80, color: '#03dac6', label: 'PARTY', action: () => { socket.emit('get_party_list'); openModal('partyModal'); } },
-            { x: 15, y: 625, width: 80, height: 80, color: '#7c4dff', label: 'UNITS', action: () => { processInventory(); renderInventoryUI(); openModal('inventoryModal'); } },
-            { x: 985, y: 625, width: 80, height: 80, color: '#ff5252', label: 'RANKING', action: () => openModal('rankingModal') }
+	{ x: 15, y: 15, width: 80, height: 80, color: '#ffd700', label: 'SUMMON', action: () => openModal('summonModal') },
+        { x: 15, y: 320, width: 80, height: 80, color: '#ff9800', label: 'TRADE', action: () => { 
+            openTradeUserSelectModal(); 
+        } },
+        { x: 985, y: 15, width: 80, height: 80, color: '#03dac6', label: 'PARTY', action: () => { socket.emit('get_party_list'); openModal('partyModal'); } },
+        { x: 15, y: 625, width: 80, height: 80, color: '#7c4dff', label: 'UNITS', action: () => { processInventory(); renderInventoryUI(); openModal('inventoryModal'); } },
+        { x: 985, y: 625, width: 80, height: 80, color: '#ff5252', label: 'RANKING', action: () => openModal('rankingModal') }
         ];
 
         const towers = [];
@@ -457,6 +472,36 @@
             }
         });
 
+	// index.html 하단 script 영역에 추가 또는 대체할 함수들
+	function openTradeUserSelectModal() {
+    		let listHtml = `<h3 style="text-align:center; font-size:12px; margin-bottom:6px;">거래할 플레이어 선택</h3><div style="max-height:120px; overflow-y:auto;">`;
+    		const activeEntries = Object.entries(otherPlayers);
+    		if (activeEntries.length === 0) {
+        		listHtml += `<p style="text-align:center; color:#aaa; font-size:11px;">현재 접속 중인 다른 유저가 없습니다.</p>`;
+    		} else {
+        		activeEntries.forEach(([sId, p]) => {
+            			listHtml += `<div style="background:rgba(0,0,0,0.3); padding:6px; margin-bottom:4px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+                			<span style="font-size:11px;">${p.username}</span>
+                			<button onclick="startTradeWith('${p.username}')" style="padding:2px 6px; font-size:10px; background:#1976d2;">거래 신청</button>
+            			</div>`;
+        		});
+    		}
+    		listHtml += `</div>`;
+    
+    		document.getElementById('targetUsernameTitle').innerText = "거래 대상 선택";
+    		document.getElementById('targetCoinDisplay').innerText = "-";
+    		document.getElementById('targetWinDisplay').innerText = "-";
+    		document.getElementById('targetHotbarContainer').innerHTML = listHtml;
+    		document.getElementById('openTradeBtn').style.display = 'none';
+    		openModal('playerInfoModal');
+	}
+
+	function startTradeWith(targetUsername) {
+    		closeModals();
+    		setupTradeUI(targetUsername);
+    		openModal('tradeModal');
+	}
+
         document.getElementById('signupBtn').addEventListener('click', () => {
             const username = document.getElementById('usernameInput').value.trim();
             const password = document.getElementById('passwordInput').value.trim();
@@ -515,58 +560,76 @@
             activeModalOpen = false;
         }
 
+        function updateHotbarsUI() {
+            if (!myData || !myData.hotbar) return;
+            const hotbars = [document.getElementById('persistentHotbar'), document.getElementById('gameHotbar')];
+            hotbars.forEach(hb => {
+                if (!hb) return;
+                const slots = hb.querySelectorAll('.hotbar-slot');
+                slots.forEach((slot, idx) => {
+                    const towerName = myData.hotbar[idx];
+                    const stats = towerName ? towerStats[towerName] : null;
+                    slot.innerHTML = `
+                        <span class="slot-num">${idx+1}</span>
+                        ${towerName ? `<img src="assets/images/${towerName}.png" alt="${towerName}">` : ''}
+                        <div class="hotbar-cost">${stats ? stats.cost + 'G' : ''}</div>
+                    `;
+                });
+            });
+        }
+
         const keys = {};
         window.addEventListener('keydown', (e) => { keys[e.key] = true; });
         window.addEventListener('keyup', (e) => { keys[e.key] = false; });
 
-        let joystickVector = { x: 0, y: 0 };
         const joystickContainer = document.getElementById('joystickContainer');
         const joystickStick = document.getElementById('joystickStick');
         let joystickTouchId = null;
-        const joystickRadius = 25;
+        let joystickCenter = { x: 0, y: 0 };
+        const joystickVector = { x: 0, y: 0 };
 
         joystickContainer.addEventListener('touchstart', (e) => {
-            e.preventDefault();
+            if (joystickTouchId !== null) return;
             const touch = e.changedTouches[0];
             joystickTouchId = touch.identifier;
-            updateJoystick(touch);
+            const rect = joystickContainer.getBoundingClientRect();
+            joystickCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+            handleJoystickMove(touch.clientX, touch.clientY);
         });
 
         joystickContainer.addEventListener('touchmove', (e) => {
-            e.preventDefault();
             for (let i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === joystickTouchId) {
-                    updateJoystick(e.changedTouches[i]);
+                const touch = e.changedTouches[i];
+                if (touch.identifier === joystickTouchId) {
+                    handleJoystickMove(touch.clientX, touch.clientY);
                     break;
                 }
             }
         });
 
-        function endJoystick() {
-            joystickTouchId = null;
-            joystickVector = { x: 0, y: 0 };
-            joystickStick.style.transform = `translate(0px, 0px)`;
-        }
+        joystickContainer.addEventListener('touchend', (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                if (touch.identifier === joystickTouchId) {
+                    joystickTouchId = null;
+                    joystickStick.style.transform = `translate(0px, 0px)`;
+                    joystickVector.x = 0;
+                    joystickVector.y = 0;
+                    break;
+                }
+            }
+        });
 
-        joystickContainer.addEventListener('touchend', endJoystick);
-        joystickContainer.addEventListener('touchcancel', endJoystick);
-
-        function updateJoystick(touch) {
-            const rect = joystickContainer.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            const dx = touch.clientX - centerX;
-            const dy = touch.clientY - centerY;
+        function handleJoystickMove(clientX, clientY) {
+            const dx = clientX - joystickCenter.x;
+            const dy = clientY - joystickCenter.y;
             const dist = Math.hypot(dx, dy);
-
+            const joystickRadius = 30;
             let angle = Math.atan2(dy, dx);
             let clampedDist = Math.min(dist, joystickRadius);
-
             let moveX = Math.cos(angle) * clampedDist;
             let moveY = Math.sin(angle) * clampedDist;
-
             joystickStick.style.transform = `translate(${moveX}px, ${moveY}px)`;
-
             joystickVector.x = moveX / joystickRadius;
             joystickVector.y = moveY / joystickRadius;
         }
@@ -582,7 +645,6 @@
                 let moved = false;
                 let vx = 0;
                 let vy = 0;
-
                 if (keys['w'] || keys['W']) vy -= 1;
                 if (keys['s'] || keys['S']) vy += 1;
                 if (keys['a'] || keys['A']) vx -= 1;
@@ -622,28 +684,32 @@
             lobbyAnimId = requestAnimationFrame(updateLobby);
         }
 
-        function drawBlockyAvatar(ctx, x, y, w, h, bodyColor, name) {
-            ctx.fillStyle = bodyColor;
-            ctx.fillRect(x, y + 10, w, h - 10);
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(x, y + 10, w, h - 10);
+        function drawBlockyAvatar(ctx, x, y, w, h, color, username) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x + 4, y + 10, w - 8, h - 14);
+            ctx.fillStyle = '#ffccaa';
+            ctx.fillRect(x + 6, y, w - 12, 12);
+            ctx.fillStyle = '#333';
+            ctx.fillRect(x + 5, y + 14, 4, 16);
+            ctx.fillRect(x + w - 9, y + 14, 4, 16);
+            ctx.fillStyle = '#555';
+            ctx.fillRect(x + 6, y + h - 4, 6, 4);
+            ctx.fillRect(x + w - 12, y + h - 4, 6, 4);
 
-            ctx.fillStyle = '#ffdbac';
-            ctx.fillRect(x + 3, y, w - 6, 12);
-            ctx.strokeRect(x + 3, y, w - 6, 12);
-
-            ctx.fillStyle = '#fff';
-            ctx.font = '10px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(name, x + w / 2, y - 4);
-            ctx.textAlign = 'left';
+            if (username) {
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 10px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(username, x + w / 2, y - 4);
+                ctx.textAlign = 'left';
+            }
         }
 
         function drawLobby() {
             lobbyCtx.clearRect(0, 0, lobbyCanvas.width, lobbyCanvas.height);
-            lobbyCtx.strokeStyle = '#252525';
-            lobbyCtx.lineWidth = 1.5;
+
+            lobbyCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+            lobbyCtx.lineWidth = 1;
             for (let x = 0; x < lobbyCanvas.width; x += tileSize) {
                 lobbyCtx.beginPath(); lobbyCtx.moveTo(x, 0); lobbyCtx.lineTo(x, lobbyCanvas.height); lobbyCtx.stroke();
             }
@@ -657,7 +723,6 @@
                 lobbyCtx.strokeStyle = '#fff';
                 lobbyCtx.lineWidth = 2;
                 lobbyCtx.strokeRect(zone.x, zone.y, zone.width, zone.height);
-                
                 lobbyCtx.fillStyle = '#000';
                 lobbyCtx.font = 'bold 11px sans-serif';
                 lobbyCtx.textAlign = 'center';
@@ -671,11 +736,10 @@
             }
 
             if (myData) {
-                drawBlockyAvatar(lobbyCtx, lobbyPlayer.x, lobbyPlayer.y, lobbyPlayer.width, lobbyPlayer.height, lobbyPlayer.color, myData.username);
+                drawBlockyAvatar(lobbyCtx, lobbyPlayer.x, lobbyPlayer.y, lobbyPlayer.width, lobbyPlayer.height, myData.color, myData.username);
             }
         }
 
-        // --- [요청 1 해결] 접속 동기화 처리 ---
         socket.on('current_players', (players) => {
             for (const id in players) {
                 otherPlayers[id] = players[id];
@@ -699,13 +763,11 @@
             }
         });
 
-        // --- [요청 2, 4 해결] 로비에서 다른 플레이어 클릭 시 정보 및 핫바 확인 ---
         if (lobbyCanvas) {
             lobbyCanvas.addEventListener('click', (e) => {
                 const rect = lobbyCanvas.getBoundingClientRect();
                 const clickX = (e.clientX - rect.left) * (lobbyCanvas.width / rect.width);
                 const clickY = (e.clientY - rect.top) * (lobbyCanvas.height / rect.height);
-
                 for (const id in otherPlayers) {
                     const p = otherPlayers[id];
                     if (clickX >= p.x - 15 && clickX <= p.x + 40 && clickY >= p.y - 15 && clickY <= p.y + 50) {
@@ -720,67 +782,25 @@
             document.getElementById('targetUsernameTitle').innerText = `${info.username} 님의 정보`;
             document.getElementById('targetCoinDisplay').innerText = info.coins;
             document.getElementById('targetWinDisplay').innerText = info.wins;
-
             const hbContainer = document.getElementById('targetHotbarContainer');
-            hbContainer.innerHTML = '';
-            
-            (info.hotbar || []).forEach((towerName) => {
-                const slot = document.createElement('div');
-                slot.className = 'hotbar-slot';
-                slot.style.width = '42px';
-                slot.style.height = '48px';
-                slot.innerHTML = `<img src="assets/images/${towerName}.png" alt="${towerName}" style="width:22px;height:22px;margin-top:8px;"><div class="hotbar-cost" style="font-size:8px;">${towerStats[towerName]?.damage ? 'DMG:'+towerStats[towerName].damage : ''}</div>`;
-                
-                slot.addEventListener('click', () => {
-                    const stat = towerStats[towerName];
-                    alert(`[${towerName} 스탯 정보]\n- 공격력: ${stat?.damage || 0}\n- 사거리: ${stat?.range || 0}\n- 비용: ${stat?.cost || 0}G\n(※ 다른 플레이어의 타워는 업그레이드할 수 없습니다.)`);
-                });
-                hbContainer.appendChild(slot);
-            });
-
+            hbContainer.innerHTML = info.hotbar.map((name, idx) => {
+                const stats = name ? (towerStats[name] || { cost: 100 }) : null;
+                return `
+                    <div class="hotbar-slot" style="width:40px; height:46px; background:rgba(0,0,0,0.3); cursor:default;">
+                        <span class="slot-num">${idx+1}</span>
+                        ${name ? `<img src="assets/images/${name}.png" style="width:20px; height:20px; margin-top:6px;">` : ''}
+                        ${stats ? `<div class="hotbar-cost" style="font-size:8px;">${stats.cost}G</div>` : ''}
+                    </div>
+                `;
+            }).join('');
             document.getElementById('openTradeBtn').onclick = () => {
                 closeModals();
-                openModal('tradeModal');
                 setupTradeUI(info.username);
+                openModal('tradeModal');
             };
-
             openModal('playerInfoModal');
         });
 
-        // --- [요청 3 해결] 파티원 간 게임 연동 (캐시 및 웨이브 공유) ---
-        socket.on('start_game_client', (party) => {
-            currentParty = party;
-            currentDifficulty = party.difficulty;
-            gameCash = party.cash || 1000;
-            currentWave = party.wave || 1;
-            currentPathWaypoints = getPixelPath(currentDifficulty);
-            inGameActive = true;
-            showScreen('gameScreen');
-            startGameLoop();
-        });
-
-        function syncPartyAction(actionType, data) {
-            if (currentParty) {
-                socket.emit('party_action', { type: actionType, ...data });
-            }
-        }
-
-        socket.on('party_action_broadcast', (data) => {
-            if (data.sender === myData.username) return;
-            if (data.type === 'place_tower') {
-                towers.push(data.tower);
-                gameCash = data.remainingCash;
-                document.getElementById('cashDisplay').innerText = gameCash;
-            } else if (data.type === 'upgrade_tower') {
-                const target = towers.find(t => t.x === data.x && t.y === data.y);
-                if (target) {
-                    target.level = data.level;
-                    target.damage = data.damage;
-                }
-            }
-        });
-
-        // --- [요청 5 해결] 거래 시스템 프론트엔드 연동 ---
         function setupTradeUI(targetUsername) {
             const select = document.getElementById('tradeOfferItemSelect');
             select.innerHTML = '';
@@ -792,12 +812,10 @@
                     select.appendChild(opt);
                 });
             }
-
             document.getElementById('sendTradeOfferBtn').onclick = () => {
                 const offerCoins = parseInt(document.getElementById('tradeOfferCoins').value) || 0;
                 const selectedIdx = select.value;
                 const offerItem = (myData && myData.inventory) ? myData.inventory[selectedIdx] : null;
-
                 socket.emit('request_trade', { targetUsername, offerCoins, offerItem });
                 alert(`${targetUsername} 님에게 거래를 신청했습니다.`);
                 closeModals();
@@ -828,44 +846,48 @@
             updateTimerDisplay(timeLeft);
         });
 
-        socket.on('pool_timer_update', (timeLeft) => { updateTimerDisplay(timeLeft); });
-
-        function updateTimerDisplay(timeLeft) {
-            const mins = String(Math.floor(timeLeft / 60)).padStart(2, '0');
-            const secs = String(timeLeft % 60).padStart(2, '0');
-            const timerEl = document.getElementById('poolTimerText');
-            if (timerEl) timerEl.innerText = `Reseting in ${mins}:${secs}`;
-        }
-
-        document.getElementById('pull1Btn').addEventListener('click', () => socket.emit('summon_pull', 1));
-        document.getElementById('pull10Btn').addEventListener('click', () => socket.emit('summon_pull', 10));
-
-        socket.on('summon_result', (data) => {
-            myData.coins = data.coins;
-            myData.inventory = data.inventory;
-            processInventory();
-            updateUI();
-            renderInventoryUI();
-            document.getElementById('summonResultText').innerText = `✨ 소환 성공: [${data.results.map(r => r.tower).join(', ')}]`;
+        socket.on('pool_timer_update', (timeLeft) => {
+            updateTimerDisplay(timeLeft);
         });
 
-        function getEquippedCountMap() {
-            const countMap = {};
-            if (myData && myData.hotbar) {
-                myData.hotbar.forEach(name => { if (name) countMap[name] = (countMap[name] || 0) + 1; });
-            }
-            return countMap;
+        function updateTimerDisplay(timeLeft) {
+            const min = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const sec = (timeLeft % 60).toString().padStart(2, '0');
+            const el = document.getElementById('poolTimerText');
+            if (el) el.innerText = `Reseting in ${min}:${sec}`;
         }
 
-        function renderInventoryUI() {
-            const invContainer = document.getElementById('inventoryContainer');
-            const totalEquippedCounts = getEquippedCountMap();
-            const equippedCounts = {};
+        document.getElementById('pull1Btn').addEventListener('click', () => socket.emit('pull_summon', 1));
+        document.getElementById('pull10Btn').addEventListener('click', () => socket.emit('pull_summon', 10));
 
-            invContainer.innerHTML = myData.inventory.map((item) => {
+        socket.on('summon_result', (res) => {
+            if (res.success) {
+                myData.coins = res.coins;
+                myData.inventory = res.inventory;
+                processInventory();
+                updateUI();
+                const names = res.results.map(r => `${r.name} (${r.tier})`).join(', ');
+                document.getElementById('summonResultText').innerText = `획득: ${names}`;
+            } else {
+                alert(res.message);
+            }
+        });
+
+        function renderInventoryUI() {
+            const container = document.getElementById('inventoryContainer');
+            if (!myData || !myData.inventory) return;
+
+            const totalEquippedCounts = {};
+            if (myData.hotbar) {
+                myData.hotbar.forEach(name => {
+                    if (name) totalEquippedCounts[name] = (totalEquippedCounts[name] || 0) + 1;
+                });
+            }
+
+            const equippedCounts = {};
+            container.innerHTML = myData.inventory.map(item => {
                 equippedCounts[item.name] = (equippedCounts[item.name] || 0) + 1;
                 const isEquipped = equippedCounts[item.name] <= (totalEquippedCounts[item.name] || 0);
-
                 return `
                     <div class="inv-item" draggable="${!isEquipped}" ondragstart="${isEquipped ? '' : `onDragInventory(event, ${item.originalIndex})`}" style="background-color: ${item.color || '#e6e6e6'};">
                         ${isEquipped ? '<span style="position:absolute; top:2px; right:2px; background:#d32f2f; color:#fff; font-size:8px; padding:1px; border-radius:2px; font-weight:bold;">V</span>' : ''}
@@ -889,9 +911,12 @@
         }
 
         function allowDrop(ev) { ev.preventDefault(); }
-        function onDragInventory(ev, originalIdx) { ev.dataTransfer.setData('text/plain', JSON.stringify({ type: 'inventory', index: originalIdx })); }
-        function onDragHotbar(ev, slotIdx) { ev.dataTransfer.setData('text/plain', JSON.stringify({ type: 'hotbar', index: slotIdx })); }
-        
+        function onDragInventory(ev, originalIdx) {
+            ev.dataTransfer.setData('text/plain', JSON.stringify({ type: 'inventory', index: originalIdx }));
+        }
+        function onDragHotbar(ev, slotIdx) {
+            ev.dataTransfer.setData('text/plain', JSON.stringify({ type: 'hotbar', index: slotIdx }));
+        }
         function dropToHotbar(ev, slotIdx) {
             ev.preventDefault();
             const dataStr = ev.dataTransfer.getData('text/plain');
@@ -900,61 +925,53 @@
             if (data.type === 'inventory') {
                 const item = myData.inventory[data.index];
                 if (item) socket.emit('equip_tower', { slotIndex: slotIdx, towerName: item.name });
+            } else if (data.type === 'hotbar') {
+                socket.emit('swap_hotbar', { fromIndex: data.index, toIndex: slotIdx });
             }
         }
-
         function dropToInventory(ev) {
             ev.preventDefault();
             const dataStr = ev.dataTransfer.getData('text/plain');
             if (!dataStr) return;
             const data = JSON.parse(dataStr);
-            if (data.type === 'hotbar') socket.emit('unequip_slot', data.index);
+            if (data.type === 'hotbar') {
+                socket.emit('unequip_tower', { slotIndex: data.index });
+            }
         }
 
-        socket.on('hotbar_updated', (newHotbar) => {
-            myData.hotbar = newHotbar;
+        socket.on('inventory_update', (newInv) => {
+            myData.inventory = newInv;
+            processInventory();
             renderInventoryUI();
-            updateHotbarsUI();
+            updateUI();
         });
 
-        function updateHotbarsUI() {
-            const containers = [document.getElementById('persistentHotbar'), document.getElementById('gameHotbar')];
-            containers.forEach(container => {
-                if (!container) return;
-                const slots = container.querySelectorAll('.hotbar-slot');
-                slots.forEach((slot, idx) => {
-                    const tName = myData.hotbar[idx];
-                    const img = slot.querySelector('img');
-                    const costEl = slot.querySelector('.hotbar-cost');
-                    if (tName) {
-                        img.src = `assets/images/${tName}.png`;
-                        img.alt = tName;
-                        img.style.display = 'block';
-                        const stats = towerStats[tName] || { cost: 100 };
-                        if (costEl) costEl.innerText = `${stats.cost}G`;
-                    } else {
-                        img.src = ''; img.alt = ''; img.style.display = 'none';
-                        if (costEl) costEl.innerText = '';
-                    }
-                });
-            });
-            selectedTowerName = myData.hotbar[selectedHotbarSlotIdx] || myData.hotbar[0];
-        }
+        socket.on('hotbar_update', (newHb) => {
+            myData.hotbar = newHb;
+            renderInventoryUI();
+            updateUI();
+        });
+
+        socket.on('rankings_update', ({ coinRanking, winRanking }) => {
+            const coinList = document.getElementById('coinRankList');
+            const winList = document.getElementById('winRankList');
+            coinList.innerHTML = coinRanking.map((u, i) => `<li><span>${i+1}. ${u.username}</span> <strong>${u.coins}G</strong></li>`).join('');
+            winList.innerHTML = winRanking.map((u, i) => `<li><span>${i+1}. ${u.username}</span> <strong>${u.wins}승</strong></li>`).join('');
+        });
 
         document.getElementById('createPartyBtn').addEventListener('click', () => {
             const diff = document.getElementById('difficultySelect').value;
-            socket.emit('create_party', { difficulty: diff });
+            socket.emit('create_party', diff);
         });
 
-        socket.on('party_created', (party) => { currentParty = party; updatePartyUI(); });
         socket.on('party_list_update', (parties) => {
             const container = document.getElementById('partyListContainer');
             if (parties.length === 0) {
-                container.innerHTML = `<p style="font-size: 11px; color: #aaa;">현재 생성된 파티가 없습니다.</p>`;
+                container.innerHTML = '<p style="font-size: 11px; color: #aaa;">현재 생성된 파티가 없습니다.</p>';
                 return;
             }
             container.innerHTML = parties.map(p => `
-                <div style="background:rgba(255,255,255,0.08); padding:5px; margin-bottom:2px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="background:rgba(0,0,0,0.3); padding:4px; border-radius:4px; margin-bottom:3px; display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <strong style="font-size:12px;">방장: ${p.host}</strong> | <span style="color:#ffeb3b;">${p.difficulty}</span>
                         <div style="font-size:10px; color:#aaa;">참가자: ${p.members.join(', ')} (${p.members.length}/4)</div>
@@ -965,10 +982,24 @@
         });
 
         function joinParty(partyId) { socket.emit('join_party', partyId); }
-        socket.on('joined_party_success', (party) => { currentParty = party; updatePartyUI(); });
-        document.getElementById('leavePartyBtn').addEventListener('click', () => { if (currentParty) socket.emit('leave_party', currentParty.id); });
-        socket.on('left_party_success', () => { currentParty = null; updatePartyUI(); });
-        document.getElementById('startGameBtn').addEventListener('click', () => { if (currentParty) socket.emit('start_game', currentParty.id); });
+
+        socket.on('joined_party_success', (party) => {
+            currentParty = party;
+            updatePartyUI();
+        });
+
+        document.getElementById('leavePartyBtn').addEventListener('click', () => {
+            if (currentParty) socket.emit('leave_party', currentParty.id);
+        });
+
+        socket.on('left_party_success', () => {
+            currentParty = null;
+            updatePartyUI();
+        });
+
+        document.getElementById('startGameBtn').addEventListener('click', () => {
+            if (currentParty) socket.emit('start_game', currentParty.id);
+        });
 
         socket.on('game_started', (party) => {
             currentParty = party;
@@ -1013,36 +1044,17 @@
             document.getElementById('cashDisplay').innerText = gameCash;
             document.getElementById('waveDisplay').innerText = currentWave;
             document.getElementById('monsterCountDisplay').innerText = enemies.length;
-            document.getElementById('skipButtonsContainer').style.display = 'flex';
-
-            const skipWaveBtn = document.getElementById('skipWaveBtn');
-            if (skipWaveBtn) {
-                if (enemies.length <= 5) {
-                    skipWaveBtn.disabled = false;
-                    skipWaveBtn.style.opacity = '1';
-                    skipWaveBtn.style.cursor = 'pointer';
-                } else {
-                    skipWaveBtn.disabled = true;
-                    skipWaveBtn.style.opacity = '0.4';
-                    skipWaveBtn.style.cursor = 'not-allowed';
-                }
-            }
-
-            if (autoSkipEnabled && enemies.length === 0 && currentWave < maxWaves) {
-                currentWave++;
-                startWave();
-            }
         }
 
         function startWave() {
             enemies = [];
-            const isBossWave = (currentWave === maxWaves);
-
-            if (isBossWave) {
+            const count = 5 + currentWave * 3;
+            for (let i = 0; i < count; i++) {
                 const type = monsterTypes[Math.floor(Math.random() * monsterTypes.length)];
-                const baseHp = (400 + currentWave * 150) * type.hpMult * 4;
-                const baseSpeed = 1.1 * type.speedMult;
-
+                const isBoss = (currentWave === maxWaves && i === count - 1);
+                const baseHp = Math.floor((50 + currentWave * 45) * type.hpMult * (isBoss ? 5 : 1));
+                const baseSpeed = (1.2 + currentWave * 0.05) * type.speedMult * (isBoss ? 0.7 : 1);
+                
                 enemies.push({
                     x: currentPathWaypoints[0].x,
                     y: currentPathWaypoints[0].y,
@@ -1052,46 +1064,30 @@
                     speed: baseSpeed,
                     originalSpeed: baseSpeed,
                     slowTimer: 0,
-                    typeName: '거대 보스: ' + type.name,
+                    typeName: type.name,
                     shape: type.shape,
                     color: type.color,
-                    isBoss: true
+                    isBoss: isBoss
                 });
-            } else {
-                const count = 5 + currentWave * 2;
-                for (let i = 0; i < count; i++) {
-                    const type = monsterTypes[Math.floor(Math.random() * monsterTypes.length)];
-                    const baseHp = (50 + currentWave * 20) * type.hpMult;
-                    const baseSpeed = 1.8 * type.speedMult;
-    
-                    enemies.push({
-                        x: currentPathWaypoints[0].x,
-                        y: currentPathWaypoints[0].y,
-                        wpIndex: 0,
-                        hp: baseHp,
-                        maxHp: baseHp,
-                        speed: baseSpeed,
-                        originalSpeed: baseSpeed,
-                        slowTimer: 0,
-                        typeName: type.name,
-                        shape: type.shape,
-                        color: type.color,
-                        isBoss: false
-                    });
-                }
             }
             updateGameUI();
         }
 
         document.getElementById('skipWaveBtn').addEventListener('click', () => {
             if (enemies.length > 5) return;
-            if (currentWave < maxWaves) { currentWave++; startWave(); }
+            if (currentWave < maxWaves) {
+                currentWave++;
+                startWave();
+            }
         });
 
         document.getElementById('autoSkipBtn').addEventListener('click', () => {
             autoSkipEnabled = !autoSkipEnabled;
             document.getElementById('autoSkipBtn').innerText = `오토: ${autoSkipEnabled ? 'ON' : 'OFF'}`;
-            if (autoSkipEnabled && enemies.length === 0 && currentWave < maxWaves) { currentWave++; startWave(); }
+            if (autoSkipEnabled && enemies.length === 0 && currentWave < maxWaves) {
+                currentWave++;
+                startWave();
+            }
         });
 
         const gameCanvas = document.getElementById('gameCanvas');
@@ -1104,7 +1100,6 @@
             const scaleY = gameCanvas.height / rect.height;
             const mouseX = (e.clientX - rect.left) * scaleX;
             const mouseY = (e.clientY - rect.top) * scaleY;
-
             hoveredTower = null;
             towers.forEach(t => {
                 const cx = t.x + tileSize / 2;
@@ -1136,37 +1131,46 @@
                 return;
             }
 
-            const baseStats = towerStats[selectedTowerName] || { cost: 100, maxLevel: 3, range: 130, damage: 25, cooldownMax: 30 };
-            if (selectedTowerName && !towers.some(t => t.x === x && t.y === y)) {
-                if (gameCash >= baseStats.cost) {
-                    gameCash -= baseStats.cost;
-                    const newTower = { 
-                        x, y, 
-                        name: selectedTowerName, 
-                        level: 1,
-                        maxLevel: baseStats.maxLevel,
-                        range: baseStats.range, 
-                        damage: baseStats.damage, 
-                        cooldownMax: baseStats.cooldownMax, 
-                        cooldown: 0,
-                        slow: baseStats.slow || false
-                    };
-                    towers.push(newTower);
-                    syncPartyAction('place_tower', { tower: newTower, remainingCash: gameCash });
-                    updateGameUI();
-                } else {
-                    alert(`캐시가 부족합니다! (필요 캐시: ${baseStats.cost})`);
-                }
+            const baseStats = towerStats[selectedTowerName];
+            if (!baseStats) return;
+
+            if (gameCash >= baseStats.cost) {
+                gameCash -= baseStats.cost;
+                const newTower = {
+                    name: selectedTowerName,
+                    x: x,
+                    y: y,
+                    level: 1,
+                    maxLevel: baseStats.maxLevel,
+                    range: baseStats.range,
+                    damage: baseStats.damage,
+                    cooldownMax: baseStats.cooldownMax,
+                    cooldown: 0,
+                    slow: baseStats.slow || false
+                };
+                towers.push(newTower);
+                syncPartyAction('place_tower', { tower: newTower, remainingCash: gameCash });
+                updateGameUI();
+            } else {
+                alert('캐시가 부족합니다!');
             }
         }
+
+        gameCanvas.addEventListener('click', (e) => { handleCanvasClick(e.clientX, e.clientY); });
+        gameCanvas.addEventListener('touchend', (e) => {
+            if (e.changedTouches.length > 0) {
+                const touch = e.changedTouches[0];
+                handleCanvasClick(touch.clientX, touch.clientY);
+            }
+        });
 
         function getNextLevelStats(tower) {
             if (tower.level >= tower.maxLevel) return null;
             return {
                 level: tower.level + 1,
-                damage: Math.round(tower.damage * 1.3),
-                range: Math.round(tower.range * 1.05),
-                cooldownMax: Math.max(5, Math.round(tower.cooldownMax * 0.9)),
+                damage: Math.floor(tower.damage * 1.5),
+                range: Math.floor(tower.range * 1.1),
+                cooldownMax: Math.max(8, Math.floor(tower.cooldownMax * 0.9)),
                 cost: tower.level * 90
             };
         }
@@ -1174,7 +1178,6 @@
         function openUpgradeModal(tower) {
             selectedTowerInstance = tower;
             document.getElementById('upgradeTowerTitle').innerText = `${tower.name} (Lv.${tower.level} / Max.${tower.maxLevel})`;
-            
             const infoDiv = document.getElementById('upgradeTowerInfo');
             const nextStats = getNextLevelStats(tower);
             let currentAttackSpeed = (30 / tower.cooldownMax).toFixed(1) + '회/초';
@@ -1184,7 +1187,6 @@
                 <div>• 공속: ${currentAttackSpeed}</div>
                 <hr style="border-color:rgba(255,255,255,0.2); margin:4px 0;">
             `;
-
             if (nextStats) {
                 let nextAttackSpeed = (30 / nextStats.cooldownMax).toFixed(1) + '회/초';
                 html += `
@@ -1199,7 +1201,6 @@
                 html += `<div style="color:#ffeb3b; font-weight:bold;">최대 레벨 도달!</div>`;
                 document.getElementById('upgradeActionBtn').style.display = 'none';
             }
-
             infoDiv.innerHTML = html;
             openModal('upgradeModal');
         }
@@ -1208,40 +1209,52 @@
             if (!selectedTowerInstance) return;
             const nextStats = getNextLevelStats(selectedTowerInstance);
             if (!nextStats) return;
-
             if (gameCash >= nextStats.cost) {
                 gameCash -= nextStats.cost;
                 selectedTowerInstance.level = nextStats.level;
                 selectedTowerInstance.damage = nextStats.damage;
                 selectedTowerInstance.range = nextStats.range;
                 selectedTowerInstance.cooldownMax = nextStats.cooldownMax;
-                
                 syncPartyAction('upgrade_tower', {
                     x: selectedTowerInstance.x,
                     y: selectedTowerInstance.y,
                     level: selectedTowerInstance.level,
                     damage: selectedTowerInstance.damage
                 });
-
                 updateGameUI();
                 closeModals();
             } else {
-                alert('업그레이드 캐시가 부족합니다!');
+                alert('업그레이드 비용이 부족합니다!');
             }
         });
 
-        gameCanvas.addEventListener('click', (e) => { handleCanvasClick(e.clientX, e.clientY); });
-        gameCanvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if (e.touches.length > 0) handleCanvasClick(e.touches[0].clientX, e.touches[0].clientY);
-        }, { passive: false });
+        function syncPartyAction(actionType, data) {
+            if (currentParty) {
+                socket.emit('party_action', { type: actionType, ...data });
+            }
+        }
+
+        socket.on('party_action_broadcast', (data) => {
+            if (data.sender === myData.username) return;
+            if (data.type === 'place_tower') {
+                towers.push(data.tower);
+                gameCash = data.remainingCash;
+                document.getElementById('cashDisplay').innerText = gameCash;
+            } else if (data.type === 'upgrade_tower') {
+                const target = towers.find(t => t.x === data.x && t.y === data.y);
+                if (target) {
+                    target.level = data.level;
+                    target.damage = data.damage;
+                }
+            }
+        });
 
         function startGameLoop() {
             if (gameLoopInterval) clearInterval(gameLoopInterval);
             gameLoopInterval = setInterval(() => {
                 if (!inGameActive) return;
 
-                enemies.forEach((en, idx) => {
+                enemies.forEach(en => {
                     if (en.slowTimer > 0) {
                         en.slowTimer--;
                         en.speed = en.originalSpeed * 0.5;
@@ -1256,11 +1269,10 @@
                     const dy = targetWp.y - en.y;
                     const dist = Math.hypot(dx, dy);
 
-                    if (dist < en.speed) {
+                    if (dist <= en.speed) {
                         en.x = targetWp.x;
                         en.y = targetWp.y;
                         en.wpIndex++;
-                        if (en.wpIndex >= currentPathWaypoints.length - 1) enemies.splice(idx, 1);
                     } else {
                         en.x += (dx / dist) * en.speed;
                         en.y += (dy / dist) * en.speed;
@@ -1270,18 +1282,21 @@
                 towers.forEach(t => {
                     if (t.cooldown > 0) t.cooldown--;
                     else {
-                        const target = enemies.find(en => Math.hypot((t.x + tileSize/2) - en.x, (t.y + tileSize/2) - en.y) <= t.range);
+                        const cx = t.x + tileSize / 2;
+                        const cy = t.y + tileSize / 2;
+                        const target = enemies.find(en => Math.hypot(en.x - cx, en.y - cy) <= t.range);
                         if (target) {
                             target.hp -= t.damage;
-                            if (t.slow) target.slowTimer = 40;
                             t.cooldown = t.cooldownMax;
-                            if (target.hp <= 0) gameCash += target.isBoss ? 200 : 20;
+                            if (t.slow) target.slowTimer = 45;
                         }
                     }
                 });
 
                 for (let i = enemies.length - 1; i >= 0; i--) {
-                    if (enemies[i].hp <= 0 || enemies[i].wpIndex >= currentPathWaypoints.length - 1) enemies.splice(i, 1);
+                    if (enemies[i].hp <= 0 || enemies[i].wpIndex >= currentPathWaypoints.length - 1) {
+                        enemies.splice(i, 1);
+                    }
                 }
 
                 if (enemies.length === 0) {
@@ -1300,7 +1315,9 @@
             }, 1000 / 30);
         }
 
-        function stopGameLoop() { if (gameLoopInterval) clearInterval(gameLoopInterval); }
+        function stopGameLoop() {
+            if (gameLoopInterval) clearInterval(gameLoopInterval);
+        }
 
         socket.on('clear_reward_success', (data) => {
             myData.coins = data.coins;
@@ -1310,75 +1327,75 @@
             openModal('clearModal');
         });
 
-        document.getElementById('clearLobbyBtn').addEventListener('click', () => { closeModals(); showScreen('lobbyScreen'); });
+        document.getElementById('clearLobbyBtn').addEventListener('click', () => {
+            closeModals();
+            showScreen('lobbyScreen');
+        });
+
         document.getElementById('clearRetryBtn').addEventListener('click', () => {
             closeModals();
-            if (currentParty) { initGame(currentParty.difficulty); showScreen('gameScreen'); }
-            else showScreen('lobbyScreen');
+            if (currentParty) {
+                initGame(currentParty.difficulty);
+                showScreen('gameScreen');
+            } else showScreen('lobbyScreen');
         });
 
         function drawShapeMonster(ctx, en) {
             ctx.fillStyle = en.slowTimer > 0 ? '#00bcd4' : en.color;
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = en.isBoss ? 2.5 : 1.5;
-
             const size = en.isBoss ? 18 : 8;
-            const hpBarWidth = en.isBoss ? 35 : 20;
-            const hpBarHeight = en.isBoss ? 4 : 3;
-            const hpBarOffset = en.isBoss ? 24 : 12;
 
             ctx.beginPath();
             if (en.shape === 'circle') {
                 ctx.arc(en.x, en.y, size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
             } else if (en.shape === 'triangle') {
-                ctx.moveTo(en.x, en.y - size * 1.2);
-                ctx.lineTo(en.x - size, en.y + size * 0.8);
-                ctx.lineTo(en.x + size, en.y + size * 0.8);
+                ctx.moveTo(en.x, en.y - size);
+                ctx.lineTo(en.x - size, en.y + size);
+                ctx.lineTo(en.x + size, en.y + size);
                 ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
             } else if (en.shape === 'square') {
-                ctx.fillRect(en.x - size, en.y - size, size * 2, size * 2);
-                ctx.strokeRect(en.x - size, en.y - size, size * 2, size * 2);
-            } else if (en.shape === 'polygon') {
-                ctx.moveTo(en.x, en.y - size * 1.2);
-                ctx.lineTo(en.x + size, en.y);
-                ctx.lineTo(en.x, en.y + size * 1.2);
-                ctx.lineTo(en.x - size, en.y);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
+                ctx.rect(en.x - size, en.y - size, size * 2, size * 2);
+            } else {
+                ctx.arc(en.x, en.y, size, 0, Math.PI * 2);
             }
+            ctx.fill();
+            ctx.stroke();
 
-            ctx.fillStyle = '#000';
+            const hpBarWidth = en.isBoss ? 35 : 20;
+            const hpBarHeight = en.isBoss ? 4 : 3;
+            const hpBarOffset = en.isBoss ? 24 : 12;
+            const hpRatio = Math.max(0, en.hp / en.maxHp);
+
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
             ctx.fillRect(en.x - hpBarWidth / 2, en.y - hpBarOffset, hpBarWidth, hpBarHeight);
-            ctx.fillStyle = en.isBoss ? '#e91e63' : '#4caf50';
-            ctx.fillRect(en.x - hpBarWidth / 2, en.y - hpBarOffset, hpBarWidth * (en.hp / en.maxHp), hpBarHeight);
+            ctx.fillStyle = '#4caf50';
+            ctx.fillRect(en.x - hpBarWidth / 2, en.y - hpBarOffset, hpBarWidth * hpRatio, hpBarHeight);
         }
 
         function drawGame() {
             gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
-            
-            gameCtx.strokeStyle = '#555';
-            gameCtx.lineWidth = tileSize * 0.8;
-            gameCtx.lineCap = 'round';
-            gameCtx.lineJoin = 'round';
-            gameCtx.beginPath();
-            currentPathWaypoints.forEach((wp, idx) => {
-                if (idx === 0) gameCtx.moveTo(wp.x, wp.y);
-                else gameCtx.lineTo(wp.x, wp.y);
-            });
-            gameCtx.stroke();
 
-            gameCtx.strokeStyle = '#252525';
-            gameCtx.lineWidth = 1.5;
+            gameCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+            gameCtx.lineWidth = 1;
             for (let x = 0; x < gameCanvas.width; x += tileSize) {
                 gameCtx.beginPath(); gameCtx.moveTo(x, 0); gameCtx.lineTo(x, gameCanvas.height); gameCtx.stroke();
             }
             for (let y = 0; y < gameCanvas.height; y += tileSize) {
                 gameCtx.beginPath(); gameCtx.moveTo(0, y); gameCtx.lineTo(gameCanvas.width, y); gameCtx.stroke();
+            }
+
+            if (currentPathWaypoints.length > 1) {
+                gameCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+                gameCtx.lineWidth = tileSize * 0.8;
+                gameCtx.lineCap = 'round';
+                gameCtx.lineJoin = 'round';
+                gameCtx.beginPath();
+                gameCtx.moveTo(currentPathWaypoints[0].x, currentPathWaypoints[0].y);
+                for (let i = 1; i < currentPathWaypoints.length; i++) {
+                    gameCtx.lineTo(currentPathWaypoints[i].x, currentPathWaypoints[i].y);
+                }
+                gameCtx.stroke();
             }
 
             towers.forEach(t => {
@@ -1391,46 +1408,21 @@
                 }
                 gameCtx.fillStyle = '#ffd700';
                 gameCtx.font = 'bold 10px sans-serif';
-                gameCtx.fillText(`Lv.${t.level}`, t.x + 2, t.y + 12);
+                gameCtx.fillText(`Lv.${t.level}`, t.x + 4, t.y + 12);
             });
 
             if (hoveredTower) {
-                gameCtx.save();
+                gameCtx.strokeStyle = 'rgba(255, 215, 0, 0.7)';
+                gameCtx.lineWidth = 1.5;
                 gameCtx.beginPath();
-                gameCtx.arc(hoveredTower.x + tileSize/2, hoveredTower.y + tileSize/2, hoveredTower.range, 0, Math.PI * 2);
-                gameCtx.fillStyle = 'rgba(0, 150, 255, 0.15)';
-                gameCtx.fill();
-                gameCtx.strokeStyle = 'rgba(0, 150, 255, 0.8)';
-                gameCtx.lineWidth = 2;
+                gameCtx.arc(hoveredTower.x + tileSize / 2, hoveredTower.y + tileSize / 2, hoveredTower.range, 0, Math.PI * 2);
                 gameCtx.stroke();
-                gameCtx.restore();
+                gameCtx.fillStyle = 'rgba(255, 215, 0, 0.1)';
+                gameCtx.fill();
             }
 
-            enemies.forEach(en => {
-                drawShapeMonster(gameCtx, en);
-            });
+            enemies.forEach(en => drawShapeMonster(gameCtx, en));
         }
-
-        socket.on('rankings_update', ({ coinRanking, winRanking }) => {
-            document.getElementById('coinRankList').innerHTML = coinRanking.map((u, i) => `
-                <li><span>${i+1}. ${u.username}</span> <strong>${u.coins}🪙</strong></li>
-            `).join('');
-            document.getElementById('winRankList').innerHTML = winRanking.map((u, i) => `
-                <li><span>${i+1}. ${u.username}</span> <strong>${u.wins}승</strong></li>
-            `).join('');
-        });
-
-        document.querySelectorAll('.persistent-hotbar').forEach(hotbarEl => {
-            const slots = hotbarEl.querySelectorAll('.hotbar-slot');
-            slots.forEach(slot => {
-                slot.addEventListener('click', () => {
-                    slots.forEach(s => s.classList.remove('active'));
-                    slot.classList.add('active');
-                    selectedHotbarSlotIdx = parseInt(slot.getAttribute('data-index'));
-                    selectedTowerName = myData.hotbar[selectedHotbarSlotIdx];
-                });
-            });
-        });
 
         window.addEventListener('keydown', (e) => {
             if (e.key >= '1' && e.key <= '5') {
