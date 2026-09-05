@@ -10,7 +10,7 @@
         ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #777; }
 
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #fff; margin: 0; padding: 10px; text-align: center; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow-x: hidden; font-size: 15px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #fff; margin: 0; padding: 10px; text-align: center; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow-x: hidden; font-size: 15px; user-select: none; -webkit-user-select: none; }
         * { box-sizing: border-box; }
         
         .screen { display: none; width: 100%; max-width: 1250px; margin: 0 auto; flex-direction: column; align-items: center; justify-content: center; }
@@ -58,10 +58,10 @@
 
         .game-top-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; width: 100%; max-width: 1200px; margin: 0 auto 8px auto; font-weight: bold; font-size: 18px; background: rgba(255,255,255,0.05); padding: 10px 15px; border-radius: 8px; gap: 8px; }
 
-        .mobile-dpad { display: none; justify-content: center; align-items: center; gap: 8px; margin-top: 12px; }
-        @media (hover: none) and (pointer: coarse) { .mobile-dpad { display: flex; } }
-        .dpad-btn { width: 65px; height: 65px; background: rgba(255,255,255,0.2); border: 3px solid #fff; border-radius: 12px; font-size: 24px; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; user-select: none; }
-        .dpad-btn:active { background: rgba(255,255,255,0.5); }
+        /* 가상 조이스틱 스타일 */
+        #joystickContainer { display: none; position: absolute; bottom: 30px; left: 30px; width: 130px; height: 130px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3); z-index: 50; touch-action: none; pointer-events: auto; }
+        @media (hover: none) and (pointer: coarse) { #joystickContainer { display: block; } }
+        #joystickStick { position: absolute; top: 32.5px; left: 32.5px; width: 65px; height: 65px; border-radius: 50%; background: rgba(255, 255, 255, 0.4); border: 2px solid #fff; pointer-events: none; transition: transform 0.05s linear; }
     </style>
 </head>
 <body>
@@ -80,20 +80,15 @@
         </div>
     </div>
 
-    <div id="lobbyScreen" class="screen">
+    <div id="lobbyScreen" class="screen" style="position: relative;">
         <h2 style="font-size: 28px;">Tower Defense - 메인 로비</h2>
         <p style="font-size: 16px; margin: 6px 0;">보유 코인: <span id="coinDisplay">0</span>코인 | 승수: <span id="winDisplay">0</span>승</p>
         
-        <canvas id="lobbyCanvas" width="1200" height="540"></canvas>
-        
-        <div class="mobile-dpad">
-            <div style="display: flex; flex-direction: column; gap: 6px;">
-                <div style="display: flex; justify-content: center;"><div class="dpad-btn" id="btnUp">▲</div></div>
-                <div style="display: flex; gap: 50px;">
-                    <div class="dpad-btn" id="btnLeft">◀</div>
-                    <div class="dpad-btn" id="btnRight">▶</div>
-                </div>
-                <div style="display: flex; justify-content: center;"><div class="dpad-btn" id="btnDown">▼</div></div>
+        <div style="position: relative; display: inline-block; width: 100%; max-width: 1200px;">
+            <canvas id="lobbyCanvas" width="1200" height="540"></canvas>
+            <!-- 가상 조이스틱 UI -->
+            <div id="joystickContainer">
+                <div id="joystickStick"></div>
             </div>
         </div>
 
@@ -434,20 +429,58 @@
         window.addEventListener('keydown', (e) => { keys[e.key] = true; });
         window.addEventListener('keyup', (e) => { keys[e.key] = false; });
 
-        const mobileControls = { up: false, down: false, left: false, right: false };
-        function setupDpadBtn(id, dir) {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.addEventListener('touchstart', (e) => { e.preventDefault(); mobileControls[dir] = true; });
-            el.addEventListener('touchend', (e) => { e.preventDefault(); mobileControls[dir] = false; });
-            el.addEventListener('mousedown', () => { mobileControls[dir] = true; });
-            el.addEventListener('mouseup', () => { mobileControls[dir] = false; });
-            el.addEventListener('mouseleave', () => { mobileControls[dir] = false; });
+        // 가상 조이스틱 로직 구현
+        let joystickVector = { x: 0, y: 0 };
+        const joystickContainer = document.getElementById('joystickContainer');
+        const joystickStick = document.getElementById('joystickStick');
+        let joystickTouchId = null;
+        const joystickRadius = 45;
+
+        joystickContainer.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.changedTouches[0];
+            joystickTouchId = touch.identifier;
+            updateJoystick(touch);
+        });
+
+        joystickContainer.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === joystickTouchId) {
+                    updateJoystick(e.changedTouches[i]);
+                    break;
+                }
+            }
+        });
+
+        function endJoystick() {
+            joystickTouchId = null;
+            joystickVector = { x: 0, y: 0 };
+            joystickStick.style.transform = `translate(0px, 0px)`;
         }
-        setupDpadBtn('btnUp', 'up');
-        setupDpadBtn('btnDown', 'down');
-        setupDpadBtn('btnLeft', 'left');
-        setupDpadBtn('btnRight', 'right');
+
+        joystickContainer.addEventListener('touchend', endJoystick);
+        joystickContainer.addEventListener('touchcancel', endJoystick);
+
+        function updateJoystick(touch) {
+            const rect = joystickContainer.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const dx = touch.clientX - centerX;
+            const dy = touch.clientY - centerY;
+            const dist = Math.hypot(dx, dy);
+
+            let angle = Math.atan2(dy, dx);
+            let clampedDist = Math.min(dist, joystickRadius);
+
+            let moveX = Math.cos(angle) * clampedDist;
+            let moveY = Math.sin(angle) * clampedDist;
+
+            joystickStick.style.transform = `translate(${moveX}px, ${moveY}px)`;
+
+            joystickVector.x = moveX / joystickRadius;
+            joystickVector.y = moveY / joystickRadius;
+        }
 
         const lobbyCanvas = document.getElementById('lobbyCanvas');
         const lobbyCtx = lobbyCanvas.getContext('2d');
@@ -458,10 +491,24 @@
 
             if (!activeModalOpen) {
                 let moved = false;
-                if (keys['ArrowUp'] || keys['w'] || mobileControls.up) { lobbyPlayer.y -= lobbyPlayer.speed; moved = true; }
-                if (keys['ArrowDown'] || keys['s'] || mobileControls.down) { lobbyPlayer.y += lobbyPlayer.speed; moved = true; }
-                if (keys['ArrowLeft'] || keys['a'] || mobileControls.left) { lobbyPlayer.x -= lobbyPlayer.speed; moved = true; }
-                if (keys['ArrowRight'] || keys['d'] || mobileControls.right) { lobbyPlayer.x += lobbyPlayer.speed; moved = true; }
+                let vx = 0;
+                let vy = 0;
+
+                if (keys['ArrowUp'] || keys['w']) vy -= 1;
+                if (keys['ArrowDown'] || keys['s']) vy += 1;
+                if (keys['ArrowLeft'] || keys['a']) vx -= 1;
+                if (keys['ArrowRight'] || keys['d']) vx += 1;
+
+                if (vx !== 0 || vy !== 0) {
+                    const len = Math.hypot(vx, vy);
+                    lobbyPlayer.x += (vx / len) * lobbyPlayer.speed;
+                    lobbyPlayer.y += (vy / len) * lobbyPlayer.speed;
+                    moved = true;
+                } else if (joystickVector.x !== 0 || joystickVector.y !== 0) {
+                    lobbyPlayer.x += joystickVector.x * lobbyPlayer.speed;
+                    lobbyPlayer.y += joystickVector.y * lobbyPlayer.speed;
+                    moved = true;
+                }
 
                 lobbyPlayer.x = Math.max(0, Math.min(lobbyCanvas.width - lobbyPlayer.width, lobbyPlayer.x));
                 lobbyPlayer.y = Math.max(0, Math.min(lobbyCanvas.height - lobbyPlayer.height, lobbyPlayer.y));
@@ -742,7 +789,6 @@
             document.getElementById('monsterCountDisplay').innerText = enemies.length;
             document.getElementById('skipButtonsContainer').style.display = 'flex';
 
-            // 스킵 버튼 제어 (몬스터가 5마리 이하일 때만 활성화)
             const skipWaveBtn = document.getElementById('skipWaveBtn');
             if (skipWaveBtn) {
                 if (enemies.length <= 5) {
@@ -811,9 +857,8 @@
             updateGameUI();
         }
 
-        // 스킵 버튼 클릭 이벤트에 5마리 이하 검증 추가
         document.getElementById('skipWaveBtn').addEventListener('click', () => {
-            if (enemies.length > 5) return; // 5마리 초과일 경우 무시
+            if (enemies.length > 5) return;
             if (currentWave < maxWaves) { currentWave++; startWave(); }
         });
 
