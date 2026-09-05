@@ -12,26 +12,26 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #fff; margin: 0; padding: 2px; text-align: center; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; overflow-x: hidden; font-size: 12px; user-select: none; -webkit-user-select: none; }
         * { box-sizing: border-box; }
         
-/* 기본 PC 화면 크기 (원래 크기 유지) */
-        .screen { display: none; width: 100%; max-width: 780px; margin: 0 auto; flex-direction: column; align-items: center; justify-content: center; }
+	/* 기본 PC 화면 크기 (옆으로 넓힌 720px 크기 적용) */
+        .screen { display: none; width: 100%; max-width: 1100px; margin: 0 auto; flex-direction: column; align-items: center; justify-content: center; }
         .screen.active { display: flex; }
         
         canvas { background: #1e1e1e; border: 2px solid #444; cursor: crosshair; display: block; margin: 0 auto; width: 100%; max-width: 100%; height: auto; object-fit: contain; touch-action: none; }
         
-        .game-top-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; width: 100%; max-width: 750px; margin: 0 auto 5px auto; font-weight: bold; font-size: 14px; background: rgba(255,255,255,0.05); padding: 6px 10px; border-radius: 6px; gap: 5px; }
+        .game-top-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; width: 100%; max-width: 720px; margin: 0 auto 5px auto; font-weight: bold; font-size: 14px; background: rgba(255,255,255,0.05); padding: 6px 10px; border-radius: 6px; gap: 5px; }
 
-        /* 모바일 기기(너비 768px 이하)에서만 화면과 캔버스를 작게 축소 */
+        /* 모바일 기기(너비 768px 이하): PC용으로 넓힌 크기(720px)에서 1.5배 줄인 480px로 축소 */
         @media screen and (max-width: 768px) {
             body { font-size: 12px; padding: 2px; }
             .screen { max-width: 480px; }
-            .game-top_panel { max-width: 480px; font-size: 12px; padding: 4px 6px; }
+            .game-top-panel { max-width: 480px; font-size: 12px; padding: 4px 6px; }
             #joystickContainer { display: block; }
         }
 
-        /* PC 화면(너비 769px 이상)에서는 기존 원래 크기 해상도 적용 */
+        /* PC 화면(너비 769px 이상)에서는 옆으로 넓힌 720x480 해상도 적용 */
         @media screen and (min-width: 769px) {
-            #lobbyCanvas { width: 750px; height: 500px; }
-            #gameCanvas { width: 750px; height: 500px; }
+            #lobbyCanvas { width: 720px; height: 480px; }
+            #gameCanvas { width: 720px; height: 480px; }
             #joystickContainer { display: none !important; }
         }
         
@@ -96,13 +96,13 @@
     <div id="lobbyScreen" class="screen" style="position: relative;">
         <h2 style="font-size: 18px; margin: 4px 0;">메인 로비</h2>
         <p style="font-size: 12px; margin: 2px 0;">코인: <span id="coinDisplay">0</span> | 승수: <span id="winDisplay">0</span></p>
-        
-        <div style="position: relative; display: inline-block; width: 100%; max-width: 480px;">
-            <canvas id="lobbyCanvas" width="750" height="500"></canvas>
-            <div id="joystickContainer">
-                <div id="joystickStick"></div>
-            </div>
-        </div>
+
+	<div style="position: relative; display: inline-block; width: 100%; max-width: 720px;">
+    		<canvas id="lobbyCanvas" width="720" height="480"></canvas>
+    		<div id="joystickContainer">
+        		<div id="joystickStick"></div>
+    		</div>
+	</div>
 
         <div class="persistent-hotbar" id="persistentHotbar">
             <div class="hotbar-slot active" data-index="0"><span class="slot-num">1</span><img src="assets/images/Archer.png" alt="Archer"><div class="hotbar-cost">80G</div></div>
@@ -229,7 +229,7 @@
             </div>
         </div>
 
-        <canvas id="gameCanvas" width="750" height="500"></canvas>
+        <canvas id="gameCanvas" width="720" height="480"></canvas>
 
         <div class="persistent-hotbar" id="gameHotbar">
             <div class="hotbar-slot active" data-index="0"><span class="slot-num">1</span><img src="assets/images/Archer.png" alt="Archer"><div class="hotbar-cost">80G</div></div>
@@ -249,7 +249,7 @@
         
         // 480x480 정사각형 캔버스 그리드 설정 (12열 x 12행, 타일 크기 40)
         const tileSize = 40;
-        const gridCols = 12;
+        const gridCols = 18;
         const gridRows = 12;
 
         const towers = [];
