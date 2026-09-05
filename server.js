@@ -49,8 +49,6 @@ function saveUsers() {
 const activeUsers = {};
 const parties = {};
 
-// --------------------------------------------------------
-// 여기서부터는 아래의 기존 코드 그대로 유지하시면 됩니다!
 const basicTowers = [
     'Archer', 'Cannon', 'Castle', 'Crystal', 'Electricity', 
     'Fire', 'Galaxy', 'Heal', 'Ice', 'Laser', 
@@ -164,6 +162,17 @@ io.on('connection', (socket) => {
         }
         activeUsers[socket.id] = user;
         socket.emit('login_success', user);
+        
+        // ★ [요청 1 해결] 늦게 들어온 유저가 기존에 접속해 있는 유저들을 볼 수 있도록 목록 전송
+        const currentActivePlayers = {};
+        for (const sId in activeUsers) {
+            if (sId !== socket.id) {
+                currentActivePlayers[sId] = activeUsers[sId];
+            }
+        }
+        socket.emit('current_players', currentActivePlayers);
+
+        socket.broadcast.emit('player_joined', { id: socket.id, user });
         socket.emit('summon_pool_update', { pool: currentSummonPool, timeLeft: poolTimerSeconds });
         broadcastRankings();
         io.emit('party_list_update', getVisibleParties());
@@ -175,6 +184,31 @@ io.on('connection', (socket) => {
             user.x = pos.x;
             user.y = pos.y;
             socket.broadcast.emit('other_player_moved', user);
+        }
+    });
+
+    // ★ [요청 2 해결] 다른 플레이어의 핫바 및 스탯 조회 기능
+    socket.on('get_player_info', (targetUsername) => {
+        let targetUser = null;
+        for (const sId in activeUsers) {
+            if (activeUsers[sId].username === targetUsername) {
+                targetUser = activeUsers[sId];
+                break;
+            }
+        }
+        if (!targetUser && users[targetUsername]) {
+            targetUser = users[targetUsername];
+        }
+        if (targetUser) {
+            socket.emit('player_info_result', {
+                username: targetUser.username,
+                coins: targetUser.coins,
+                wins: targetUser.wins,
+                hotbar: targetUser.hotbar || [],
+                inventory: targetUser.inventory || []
+            });
+        } else {
+            socket.emit('alert', '플레이어를 찾을 수 없습니다.');
         }
     });
 
@@ -228,11 +262,15 @@ io.on('connection', (socket) => {
             difficulty: data.difficulty || 'Easy',
             maxMembers: 4,
             members: [user.username],
-            started: false
+            started: false,
+            cash: data.difficulty === 'Hard' ? 700 : 1000,
+            wave: 1
         };
         socket.join(partyId);
+        user.currentPartyId = partyId;
         socket.emit('party_created', parties[partyId]);
         io.emit('party_list_update', getVisibleParties());
+        io.to(partyId).emit('party_update', parties[partyId]);
     });
 
     socket.on('get_party_list', () => {
@@ -247,8 +285,10 @@ io.on('connection', (socket) => {
                 party.members.push(user.username);
             }
             socket.join(partyId);
+            user.currentPartyId = partyId;
             io.emit('party_list_update', getVisibleParties());
             socket.emit('joined_party_success', party);
+            io.to(partyId).emit('party_update', party);
         } else {
             socket.emit('notification', '파티에 참가할 수 없거나 이미 시작된 게임입니다.');
         }
@@ -260,6 +300,7 @@ io.on('connection', (socket) => {
         if (party && user) {
             party.members = party.members.filter(m => m !== user.username);
             socket.leave(partyId);
+            user.currentPartyId = null;
             if (party.members.length === 0) {
                 delete parties[partyId];
             } else if (party.host === user.username) {
@@ -277,6 +318,65 @@ io.on('connection', (socket) => {
             party.started = true;
             io.emit('party_list_update', getVisibleParties());
             io.to(partyId).emit('game_started', party);
+        }
+    });
+
+    // ★ [요청 3 해결] 파티원 간 인게임플레이 동기화 (타워 설치 및 업그레이드 등 공유)
+    socket.on('party_action', (data) => {
+        const user = activeUsers[socket.id];
+        if (!user || !user.currentPartyId) return;
+        io.to(user.currentPartyId).emit('party_action_broadcast', { sender: user.username, ...data });
+    });
+
+    // ★ [요청 5 해결] 1:1 거래 시스템 이벤트 처리
+    socket.on('request_trade', ({ targetUsername, offerCoins, offerItem }) => {
+        let targetSocketId = null;
+        for (const sId in activeUsers) {
+            if (activeUsers[sId].username === targetUsername) {
+                targetSocketId = sId;
+                break;
+            }
+        }
+        if (targetSocketId) {
+            io.to(targetSocketId).emit('trade_request', {
+                from: activeUsers[socket.id].username,
+                offerCoins,
+                offerItem
+            });
+        } else {
+            socket.emit('alert', '상대방이 접속 중이 아닙니다.');
+        }
+    });
+
+    socket.on('respond_trade', ({ fromUsername, accept, offerCoins, offerItem }) => {
+        // 거래 수락 시 양측 유저 간 아이템 및 코인 안전 스왑 처리 로직
+        let targetSocketId = null;
+        let targetUserObj = null;
+        for (const sId in activeUsers) {
+            if (activeUsers[sId].username === fromUsername) {
+                targetSocketId = sId;
+                targetUserObj = activeUsers[sId];
+                break;
+            }
+        }
+        const currentUser = activeUsers[socket.id];
+        if (!targetUserObj || !currentUser) return;
+
+        if (accept) {
+            // 간단 교환 검증 및 처리
+            currentUser.coins += offerCoins;
+            targetUserObj.coins -= offerCoins;
+            if (offerItem) {
+                targetUserObj.inventory = targetUserObj.inventory.filter(i => i.name !== offerItem.name);
+                currentUser.inventory.push(offerItem);
+            }
+            saveUsers();
+            socket.emit('trade_success', { coins: currentUser.coins, inventory: currentUser.inventory });
+            io.to(targetSocketId).emit('trade_success', { coins: targetUserObj.coins, inventory: targetUserObj.inventory });
+        } else {
+            if (targetSocketId) {
+                io.to(targetSocketId).emit('alert', `${currentUser.username} 님이 거래를 거절했습니다.`);
+            }
         }
     });
 
