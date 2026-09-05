@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tower Defense</title>
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #777; }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #fff; margin: 0; padding: 10px; text-align: center; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow-x: hidden; font-size: 15px; }
+        * { box-sizing: border-box; }
+        
+        .screen { display: none; width: 100%; max-width: 1250px; margin: 0 auto; flex-direction: column; align-items: center; justify-content: center; }
+        .screen.active { display: flex; }
+        
+        canvas { background: #1e1e1e; border: 3px solid #444; cursor: crosshair; display: block; margin: 0 auto; width: 100%; max-width: 1200px; height: auto; object-fit: contain; touch-action: none; }
+        
+        .persistent-hotbar { display: flex; justify-content: center; gap: 9px; margin-top: 12px; background: rgba(0,0,0,0.4); padding: 9px; border-radius: 12px; width: fit-content; margin-left: auto; margin-right: auto; max-width: 100%; overflow-x: auto; }
+        .hotbar-slot { width: 78px; height: 84px; background: transparent; border: 3px solid #666; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 3px; font-size: 14px; font-weight: bold; cursor: pointer; position: relative; border-radius: 8px; flex-shrink: 0; }
+        .hotbar-slot.active { border-color: #ffd700; box-shadow: 0 0 12px #ffd700; }
+        .hotbar-slot > span.slot-num { position: absolute; top: 3px; left: 6px; font-size: 13px; color: #fff; text-shadow: 1px 1px #000; }
+        .hotbar-slot img { width: 39px; height: 39px; object-fit: contain; margin-top: 15px; }
+        .hotbar-cost { font-size: 13px; color: #ffd700; margin-top: 3px; text-shadow: 1px 1px #000; }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 100; align-items: center; justify-content: center; padding: 15px; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: #1e88e5; border: 4px solid #0d47a1; padding: 22px; border-radius: 20px; width: 100%; max-width: 800px; text-align: left; box-shadow: 0 0 35px rgba(0,0,0,0.8); position: relative; color: #fff; max-height: 90vh; overflow-y: auto; }
+        
+        .modal-content h3 { margin-top: 0; color: #fff; border-bottom: 3px solid rgba(255,255,255,0.3); padding-bottom: 12px; font-size: 24px; padding-right: 45px; }
+        .close-modal { position: absolute; top: 16px; right: 20px; background: #d32f2f; border: none; color: #fff; font-size: 18px; font-weight: bold; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        button { background: #2e7d32; color: #fff; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 18px; }
+        button:hover { background: #388e3c; }
+        input, select { padding: 12px; background: #2c2c2c; border: 2px solid #555; color: #fff; border-radius: 8px; margin: 6px 0; width: 100%; max-width: 380px; font-size: 16px; }
+
+        .inventory-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; max-height: 320px; overflow-y: auto; margin-top: 15px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 12px; }
+        .inv-item { border: 3px solid #444; padding: 6px; text-align: center; border-radius: 8px; cursor: grab; font-size: 14px; position: relative; color: #000; font-weight: bold; }
+        .inv-item:active { cursor: grabbing; }
+        .inv-item[draggable="false"] { cursor: not-allowed; opacity: 0.65; }
+        .inv-item img { width: 48px; height: 48px; object-fit: contain; display: block; margin: 0 auto 4px; }
+        
+        .ranking-container { display: flex; flex-direction: column; gap: 15px; }
+        @media(min-width: 600px) { .ranking-container { flex-direction: row; justify-content: space-between; } }
+        .ranking-box { width: 100%; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px; max-height: 280px; overflow-y: auto; }
+        .ranking-box ul { list-style: none; padding: 0; margin: 0; font-size: 16px; }
+        .ranking-box li { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; }
+
+        .summon-layout { display: flex; flex-direction: column; gap: 15px; }
+        @media(min-width: 600px) { .summon-layout { flex-direction: row; } }
+        .summon-left { width: 100%; max-height: 260px; overflow-y: auto; }
+        @media(min-width: 600px) { .summon-left { width: 55%; max-height: 320px; } }
+        .summon-right { width: 100%; display: flex; flex-direction: column; justify-content: center; gap: 15px; background: rgba(0,0,0,0.2); padding: 18px; border-radius: 12px; text-align: center; }
+        @media(min-width: 600px) { .summon-right { width: 45%; } }
+        .tier-rate-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; font-weight: bold; color: #000; font-size: 15px; }
+
+        .game-top-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; width: 100%; max-width: 1200px; margin: 0 auto 8px auto; font-weight: bold; font-size: 18px; background: rgba(255,255,255,0.05); padding: 10px 15px; border-radius: 8px; gap: 8px; }
+
+        .mobile-dpad { display: none; justify-content: center; align-items: center; gap: 8px; margin-top: 12px; }
+        @media (hover: none) and (pointer: coarse) { .mobile-dpad { display: flex; } }
+        .dpad-btn { width: 65px; height: 65px; background: rgba(255,255,255,0.2); border: 3px solid #fff; border-radius: 12px; font-size: 24px; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; user-select: none; }
+        .dpad-btn:active { background: rgba(255,255,255,0.5); }
+    </style>
+</head>
+<body>
+
+    <div id="loginScreen" class="screen active">
+        <h2 style="font-size: 32px;">Tower Defense</h2>
+        <div style="background: #1e1e1e; display: inline-block; padding: 30px; border-radius: 15px; border: 2px solid #444; width: 100%; max-width: 500px;">
+            <div style="margin-bottom: 15px;">
+                <input type="text" id="usernameInput" placeholder="아이디(닉네임)"><br>
+                <input type="password" id="passwordInput" placeholder="비밀번호">
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button id="loginBtn" style="background:#1976d2; flex:1;">로그인</button>
+                <button id="signupBtn" style="background:#d81b60; flex:1;">회원가입</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="lobbyScreen" class="screen">
+        <h2 style="font-size: 28px;">Tower Defense - 메인 로비</h2>
+        <p style="font-size: 16px; margin: 6px 0;">보유 코인: <span id="coinDisplay">0</span>코인 | 승수: <span id="winDisplay">0</span>승</p>
+        
+        <canvas id="lobbyCanvas" width="1200" height="540"></canvas>
+        
+        <div class="mobile-dpad">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+                <div style="display: flex; justify-content: center;"><div class="dpad-btn" id="btnUp">▲</div></div>
+                <div style="display: flex; gap: 50px;">
+                    <div class="dpad-btn" id="btnLeft">◀</div>
+                    <div class="dpad-btn" id="btnRight">▶</div>
+                </div>
+                <div style="display: flex; justify-content: center;"><div class="dpad-btn" id="btnDown">▼</div></div>
+            </div>
+        </div>
+
+        <div class="persistent-hotbar" id="persistentHotbar">
+            <div class="hotbar-slot active" data-index="0"><span class="slot-num">1</span><img src="assets/images/Archer.png" alt="Archer"><div class="hotbar-cost">80G</div></div>
+            <div class="hotbar-slot" data-index="1"><span class="slot-num">2</span><img src="assets/images/Cannon.png" alt="Cannon"><div class="hotbar-cost">180G</div></div>
+            <div class="hotbar-slot" data-index="2"><span class="slot-num">3</span><img src="assets/images/Fire.png" alt="Fire"><div class="hotbar-cost">130G</div></div>
+            <div class="hotbar-slot" data-index="3"><span class="slot-num">4</span><img src="assets/images/Ice.png" alt="Ice"><div class="hotbar-cost">120G</div></div>
+            <div class="hotbar-slot" data-index="4"><span class="slot-num">5</span><img src="assets/images/Sniper.png" alt="Sniper"><div class="hotbar-cost">250G</div></div>
+        </div>
+        <p style="font-size: 14px; color: #aaa; margin: 8px 0;">
+            🟨 좌상단: 소환소 | 🟩 좌하단: 인벤토리 | 🟦 우상단: 파티/시작 | 🟪 우상단: 랭킹
+        </p>
+    </div>
+
+    <div id="summonModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModals()">✕</button>
+            <h3 style="margin-top:0;">Summon</h3>
+            <div class="summon-layout">
+                <div class="summon-left" id="summonRatesContainer"></div>
+                <div class="summon-right">
+                    <h4 style="margin:0; color:#fff; font-size:20px;">Main Crate</h4>
+                    <button id="pull1Btn" style="background: #2e7d32; padding: 15px; font-size: 18px; width: 100%;">100🪙 Summon 1</button>
+                    <button id="pull10Btn" style="background: #7b1fa2; padding: 15px; font-size: 18px; width: 100%;">900🪙 Summon 10</button>
+                    <p id="poolTimerText" style="font-size: 15px; color: #ffeb3b; margin: 0;">Reseting in 05:00</p>
+                </div>
+            </div>
+            <p id="summonResultText" style="margin-top: 12px; color: #ffeb3b; font-weight: bold; text-align: center; font-size: 16px;"></p>
+        </div>
+    </div>
+
+    <div id="inventoryModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModals()">✕</button>
+            <h3 style="margin:0 0 10px 0;">Units (인벤토리 장착)</h3>
+            <p style="font-size: 15px; margin: 0 0 8px 0;">인벤토리 타워를 드래그해서 핫바 칸에 올리면 장착되고, 핫바 타워를 인벤토리로 드래그하면 해제됩니다.</p>
+            
+            <div id="inventoryContainer" class="inventory-grid" ondragover="allowDrop(event)" ondrop="dropToInventory(event)"></div>
+            
+            <div style="margin-top: 15px;">
+                <p style="font-size: 15px; margin: 0 0 6px 0;">현재 핫바 슬롯:</p>
+                <div style="display: flex; gap: 6px;" id="modalHotbarSlots"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="partyModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModals()">✕</button>
+            <h3>파티 및 게임 시작</h3>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 16px; display: block; margin-bottom: 5px;">난이도 선택:</label>
+                <select id="difficultySelect" style="width: 100%; max-width: 100%;">
+                    <option value="Easy" selected>Easy (쉬움 - 캐시 1500 / 보상 코인 200)</option>
+                    <option value="Normal">Normal (보통 - 캐시 1000 / 보상 코인 500)</option>
+                    <option value="Hard">Hard (어려움 - 캐시 700 / 보상 코인 1000)</option>
+                    <option value="Extreme">Extreme (익스트림 - 캐시 400 / 보상 코인 2000)</option>
+                </select>
+                <button id="createPartyBtn" style="background:#1976d2; width: 100%; margin-top: 8px;">파티 만들기</button>
+            </div>
+
+            <div id="myPartyBox" style="background:rgba(0,0,0,0.25); padding:12px; border-radius:8px; margin-bottom:15px; display:none;">
+                <h4 style="margin:0 0 6px 0; color:#ffeb3b; font-size:18px;">내 파티 현황</h4>
+                <p id="partyMembersText" style="font-size:15px; margin:0 0 10px 0;"></p>
+                <div style="display:flex; gap:8px;">
+                    <button id="startGameBtn" style="background:#2e7d32; padding:8px 15px; font-size:15px; display:none; flex:1;">게임 시작</button>
+                    <button id="leavePartyBtn" style="background:#d32f2f; padding:8px 15px; font-size:15px; flex:1;">파티 나가기</button>
+                </div>
+            </div>
+
+            <h4 style="margin: 12px 0 6px 0; font-size: 18px;">참가 가능한 파티 목록</h4>
+            <div id="partyListContainer" style="max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px;">
+                <p style="font-size: 15px; color: #aaa;">현재 생성된 파티가 없습니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="rankingModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModals()">✕</button>
+            <h3 style="margin-top:0;">🏆 실시간 리더보드</h3>
+            <div class="ranking-container">
+                <div class="ranking-box">
+                    <h4 style="color: #ffd700; margin-top:0; font-size:20px;">코인 랭킹</h4>
+                    <ul id="coinRankList"></ul>
+                </div>
+                <div class="ranking-box">
+                    <h4 style="color: #03dac6; margin-top:0; font-size:20px;">승수 랭킹</h4>
+                    <ul id="winRankList"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="clearModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px; text-align: center;">
+            <h3 style="padding-right: 0;">🎉 게임 클리어!</h3>
+            <p id="clearRewardText" style="font-size: 18px; color: #ffeb3b;"></p>
+            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
+                <button id="clearLobbyBtn" style="background: #1976d2; flex:1;">로비로 가기</button>
+                <button id="clearRetryBtn" style="background: #2e7d32; flex:1;">다시플레이</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="upgradeModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px; text-align: left;">
+            <button class="close-modal" onclick="closeModals()">✕</button>
+            <h3 id="upgradeTowerTitle" style="margin-top:0;">타워 업그레이드</h3>
+            <div id="upgradeTowerInfo" style="font-size: 16px; line-height: 1.6; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-bottom: 15px;"></div>
+            <button id="upgradeActionBtn" style="background: #2e7d32; width: 100%; padding: 15px; font-size: 18px;">업그레이드</button>
+        </div>
+    </div>
+
+    <div id="gameScreen" class="screen">
+        <h2 style="font-size: 28px;">Tower Defense - 인게임</h2>
+        <div class="game-top-panel">
+            <div>웨이브: <span id="waveDisplay">1</span> / 10</div>
+            <div>잔여 몬스터: <span id="monsterCountDisplay">0</span>마리</div>
+            <div>💰 캐시: <span id="cashDisplay">1000</span></div>
+            <div id="skipButtonsContainer" style="display:flex; gap:6px;">
+                <button id="skipWaveBtn" style="background:#e65100; padding:6px 12px; font-size:14px;">스킵</button>
+                <button id="autoSkipBtn" style="background:#4527a0; padding:6px 12px; font-size:14px;">오토스킵: OFF</button>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="1200" height="600"></canvas>
+
+        <div class="persistent-hotbar" id="gameHotbar">
+            <div class="hotbar-slot active" data-index="0"><span class="slot-num">1</span><img src="assets/images/Archer.png" alt="Archer"><div class="hotbar-cost">80G</div></div>
+            <div class="hotbar-slot" data-index="1"><span class="slot-num">2</span><img src="assets/images/Cannon.png" alt="Cannon"><div class="hotbar-cost">180G</div></div>
+            <div class="hotbar-slot" data-index="2"><span class="slot-num">3</span><img src="assets/images/Fire.png" alt="Fire"><div class="hotbar-cost">130G</div></div>
+            <div class="hotbar-slot" data-index="3"><span class="slot-num">4</span><img src="assets/images/Ice.png" alt="Ice"><div class="hotbar-cost">120G</div></div>
+            <div class="hotbar-slot" data-index="4"><span class="slot-num">5</span><img src="assets/images/Sniper.png" alt="Sniper"><div class="hotbar-cost">250G</div></div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let myData = null;
+        let selectedTowerName = 'Archer';
+        let selectedHotbarSlotIdx = 0;
+        
+        const tileSize = 60;
+        const gridCols = 20;
+        const gridRows = 10;
+
+        const towers = [];
+        let selectedTowerInstance = null;
+        const otherPlayers = {};
+        let lobbyAnimId = null;
+
+        let currentParty = null;
+        let inGameActive = false;
+        let gameCash = 1000;
+        let currentWave = 1;
+        let maxWaves = 10;
+        let enemies = [];
+        let gameLoopInterval = null;
+        let autoSkipEnabled = false;
+        let currentDifficulty = 'Easy';
+        let hoveredTower = null;
+
+        const tierOrder = { 'Godly': 7, 'Mythical': 6, 'Legendary': 5, 'Epic': 4, 'Rare': 3, 'Uncommon': 2, 'Common': 1 };
+
+        const towerStats = {
+            'Archer': { cost: 80, maxLevel: 3, range: 165, damage: 15, cooldownMax: 18 },
+            'Cannon': { cost: 180, maxLevel: 3, range: 135, damage: 50, cooldownMax: 45 },
+            'Castle': { cost: 200, maxLevel: 4, range: 195, damage: 35, cooldownMax: 30 },
+            'Crystal': { cost: 150, maxLevel: 3, range: 180, damage: 30, cooldownMax: 25 },
+            'Electricity': { cost: 160, maxLevel: 3, range: 172, damage: 28, cooldownMax: 22 },
+            'Fire': { cost: 130, maxLevel: 3, range: 150, damage: 35, cooldownMax: 28 },
+            'Galaxy': { cost: 300, maxLevel: 5, range: 240, damage: 60, cooldownMax: 40 },
+            'Heal': { cost: 100, maxLevel: 3, range: 150, damage: 10, cooldownMax: 30 },
+            'Ice': { cost: 120, maxLevel: 3, range: 158, damage: 18, cooldownMax: 32, slow: true },
+            'Laser': { cost: 220, maxLevel: 4, range: 225, damage: 45, cooldownMax: 30 },
+            'Magic': { cost: 140, maxLevel: 3, range: 180, damage: 32, cooldownMax: 26 },
+            'Outpost': { cost: 110, maxLevel: 3, range: 150, damage: 20, cooldownMax: 25 },
+            'Poison': { cost: 130, maxLevel: 3, range: 150, damage: 22, cooldownMax: 24 },
+            'Sniper': { cost: 250, maxLevel: 3, range: 300, damage: 85, cooldownMax: 60 },
+            'Steampunk': { cost: 170, maxLevel: 3, range: 165, damage: 30, cooldownMax: 28 },
+            'Tree': { cost: 90, maxLevel: 3, range: 150, damage: 15, cooldownMax: 30 },
+            'Upgrade_Cannon': { cost: 280, maxLevel: 4, range: 160, damage: 110, cooldownMax: 35 },
+            'Upgrade_Electricity': { cost: 250, maxLevel: 4, range: 200, damage: 65, cooldownMax: 16 },
+            'Upgrade_Fire': { cost: 210, maxLevel: 4, range: 180, damage: 80, cooldownMax: 20 },
+            'Upgrade_Ice': { cost: 200, maxLevel: 4, range: 185, damage: 45, cooldownMax: 24, slow: true }
+        };
+
+        const towerNames = Object.keys(towerStats);
+        const towerImages = {};
+        towerNames.forEach(name => {
+            const img = new Image();
+            img.src = `assets/images/${name}.png`;
+            towerImages[name] = img;
+        });
+
+        const monsterTypes = [
+            { name: '무한의 오브', shape: 'circle', color: '#ffeb3b', hpMult: 0.8, speedMult: 1.3 },
+            { name: '고대의 사면체', shape: 'triangle', color: '#03dac6', hpMult: 1.0, speedMult: 1.0 },
+            { name: '철벽의 큐브', shape: 'square', color: '#ff5252', hpMult: 1.8, speedMult: 0.7 },
+            { name: '환영의 프리즘', shape: 'polygon', color: '#b19cd9', hpMult: 1.2, speedMult: 1.1 }
+        ];
+
+        const difficultyGridPaths = {
+            Easy: [
+                { gx: 0, gy: 3 }, { gx: 5, gy: 3 }, { gx: 5, gy: 7 }, { gx: 19, gy: 7 }
+            ],
+            Normal: [
+                { gx: 0, gy: 2 }, { gx: 5, gy: 2 }, { gx: 5, gy: 6 }, { gx: 12, gy: 6 }, { gx: 12, gy: 2 }, { gx: 19, gy: 2 }
+            ],
+            Hard: [
+                { gx: 0, gy: 5 }, { gx: 4, gy: 5 }, { gx: 4, gy: 1 }, { gx: 10, gy: 1 }, { gx: 10, gy: 8 }, { gx: 15, gy: 8 }, { gx: 15, gy: 3 }, { gx: 19, gy: 3 }
+            ],
+            Extreme: [
+                { gx: 0, gy: 1 }, { gx: 3, gy: 1 }, { gx: 3, gy: 8 }, { gx: 7, gy: 8 }, { gx: 7, gy: 2 }, { gx: 11, gy: 2 }, { gx: 11, gy: 9 }, { gx: 15, gy: 9 }, { gx: 15, gy: 4 }, { gx: 19, gy: 4 }
+            ]
+        };
+
+        function getPixelPath(difficulty) {
+            const gridPath = difficultyGridPaths[difficulty] || difficultyGridPaths.Easy;
+            return gridPath.map(p => ({
+                x: p.gx * tileSize + tileSize / 2,
+                y: p.gy * tileSize + tileSize / 2
+            }));
+        }
+
+        let currentPathWaypoints = getPixelPath('Easy');
+
+        function distToSegment(p, p1, p2) {
+            const l2 = (p2.x - p1.x)**2 + (p2.y - p1.y)**2;
+            if (l2 === 0) return Math.hypot(p.x - p1.x, p.y - p1.y);
+            let t = ((p.x - p1.x) * (p2.x - p1.x) + (p.y - p1.y) * (p2.y - p1.y)) / l2;
+            t = Math.max(0, Math.min(1, t));
+            return Math.hypot(p.x - (p1.x + t * (p2.x - p1.x)), p.y - (p1.y + t * (p2.y - p1.y)));
+        }
+
+        function isPointOnPath(tx, ty) {
+            const cx = tx + tileSize / 2;
+            const cy = ty + tileSize / 2;
+            const pathWidth = tileSize * 0.8;
+            for (let i = 0; i < currentPathWaypoints.length - 1; i++) {
+                const dist = distToSegment({x: cx, y: cy}, currentPathWaypoints[i], currentPathWaypoints[i+1]);
+                if (dist < pathWidth / 2) return true;
+            }
+            return false;
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            
+            if (screenId === 'lobbyScreen') {
+                inGameActive = false;
+                stopGameLoop();
+                cancelAnimationFrame(lobbyAnimId);
+                lobbyAnimId = requestAnimationFrame(updateLobby);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            const savedUser = localStorage.getItem('game_user');
+            const savedPass = localStorage.getItem('game_pass');
+            if (savedUser && savedPass) {
+                socket.emit('login', { username: savedUser, password: savedPass });
+            }
+        });
+
+        document.getElementById('signupBtn').addEventListener('click', () => {
+            const username = document.getElementById('usernameInput').value.trim();
+            const password = document.getElementById('passwordInput').value.trim();
+            if (username && password) socket.emit('signup', { username, password });
+            else alert('아이디와 비밀번호를 입력해주세요.');
+        });
+
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            const username = document.getElementById('usernameInput').value.trim();
+            const password = document.getElementById('passwordInput').value.trim();
+            if (username && password) socket.emit('login', { username, password });
+            else alert('아이디와 비밀번호를 입력해주세요.');
+        });
+
+        socket.on('login_success', (user) => {
+            myData = user;
+            localStorage.setItem('game_user', user.username);
+            localStorage.setItem('game_pass', user.password);
+            processInventory();
+            updateUI();
+            showScreen('lobbyScreen');
+        });
+
+        function processInventory() {
+            if (!myData || !myData.inventory) return;
+            myData.inventory = myData.inventory.map((item, idx) => ({ ...item, originalIndex: idx }));
+            sortInventory();
+        }
+
+        function sortInventory() {
+            if (!myData || !myData.inventory) return;
+            myData.inventory.sort((a, b) => {
+                const weightA = tierOrder[a.tier] || 0;
+                const weightB = tierOrder[b.tier] || 0;
+                if (weightB !== weightA) return weightB - weightA;
+                return a.name.localeCompare(b.name);
+            });
+        }
+
+        function updateUI() {
+            if (!myData) return;
+            document.getElementById('coinDisplay').innerText = myData.coins;
+            document.getElementById('winDisplay').innerText = myData.wins;
+            updateHotbarsUI();
+        }
+
+        const lobbyPlayer = { x: 570, y: 220, width: 42, height: 54, speed: 3.5, color: '#ff4081' };
+        const interactiveZones = [
+            { x: 45, y: 45, width: 105, height: 105, color: '#ffd700', label: 'SUMMON', action: () => openModal('summonModal') },
+            { x: 1050, y: 45, width: 105, height: 105, color: '#03dac6', label: 'PARTY', action: () => { socket.emit('get_party_list'); openModal('partyModal'); } },
+            { x: 45, y: 390, width: 105, height: 105, color: '#7c4dff', label: 'UNITS', action: () => { processInventory(); renderInventoryUI(); openModal('inventoryModal'); } },
+            { x: 1050, y: 390, width: 105, height: 105, color: '#ff5252', label: 'RANKING', action: () => openModal('rankingModal') }
+        ];
+
+        let activeModalOpen = false;
+        function openModal(modalId) {
+            if (activeModalOpen) return;
+            activeModalOpen = true;
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModals() {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+            activeModalOpen = false;
+        }
+
+        const keys = {};
+        window.addEventListener('keydown', (e) => { keys[e.key] = true; });
+        window.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+        const mobileControls = { up: false, down: false, left: false, right: false };
+        function setupDpadBtn(id, dir) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('touchstart', (e) => { e.preventDefault(); mobileControls[dir] = true; });
+            el.addEventListener('touchend', (e) => { e.preventDefault(); mobileControls[dir] = false; });
+            el.addEventListener('mousedown', () => { mobileControls[dir] = true; });
+            el.addEventListener('mouseup', () => { mobileControls[dir] = false; });
+            el.addEventListener('mouseleave', () => { mobileControls[dir] = false; });
+        }
+        setupDpadBtn('btnUp', 'up');
+        setupDpadBtn('btnDown', 'down');
+        setupDpadBtn('btnLeft', 'left');
+        setupDpadBtn('btnRight', 'right');
+
+        const lobbyCanvas = document.getElementById('lobbyCanvas');
+        const lobbyCtx = lobbyCanvas.getContext('2d');
+
+        function updateLobby() {
+            const lobbyScreen = document.getElementById('lobbyScreen');
+            if (!lobbyScreen.classList.contains('active')) return;
+
+            if (!activeModalOpen) {
+                let moved = false;
+                if (keys['ArrowUp'] || keys['w'] || mobileControls.up) { lobbyPlayer.y -= lobbyPlayer.speed; moved = true; }
+                if (keys['ArrowDown'] || keys['s'] || mobileControls.down) { lobbyPlayer.y += lobbyPlayer.speed; moved = true; }
+                if (keys['ArrowLeft'] || keys['a'] || mobileControls.left) { lobbyPlayer.x -= lobbyPlayer.speed; moved = true; }
+                if (keys['ArrowRight'] || keys['d'] || mobileControls.right) { lobbyPlayer.x += lobbyPlayer.speed; moved = true; }
+
+                lobbyPlayer.x = Math.max(0, Math.min(lobbyCanvas.width - lobbyPlayer.width, lobbyPlayer.x));
+                lobbyPlayer.y = Math.max(0, Math.min(lobbyCanvas.height - lobbyPlayer.height, lobbyPlayer.y));
+
+                if (moved) socket.emit('player_move', { x: lobbyPlayer.x, y: lobbyPlayer.y });
+
+                interactiveZones.forEach(zone => {
+                    if (
+                        lobbyPlayer.x < zone.x + zone.width &&
+                        lobbyPlayer.x + lobbyPlayer.width > zone.x &&
+                        lobbyPlayer.y < zone.y + zone.height &&
+                        lobbyPlayer.y + lobbyPlayer.height > zone.y
+                    ) {
+                        zone.action();
+                        if (zone.x < 150) lobbyPlayer.x += 60;
+                        else lobbyPlayer.x -= 60;
+                    }
+                });
+            }
+
+            drawLobby();
+            lobbyAnimId = requestAnimationFrame(updateLobby);
+        }
+
+        function drawBlockyAvatar(ctx, x, y, w, h, bodyColor, name) {
+            ctx.fillStyle = bodyColor;
+            ctx.fillRect(x, y + 18, w, h - 18);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y + 18, w, h - 18);
+
+            ctx.fillStyle = '#ffdbac';
+            ctx.fillRect(x + 6, y, w - 12, 21);
+            ctx.strokeRect(x + 6, y, w - 12, 21);
+
+            ctx.fillStyle = '#fff';
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(name, x + w / 2, y - 8);
+            ctx.textAlign = 'left';
+        }
+
+        function drawLobby() {
+            lobbyCtx.clearRect(0, 0, lobbyCanvas.width, lobbyCanvas.height);
+            lobbyCtx.strokeStyle = '#252525';
+            lobbyCtx.lineWidth = 1.5;
+            for (let x = 0; x < lobbyCanvas.width; x += tileSize) {
+                lobbyCtx.beginPath(); lobbyCtx.moveTo(x, 0); lobbyCtx.lineTo(x, lobbyCanvas.height); lobbyCtx.stroke();
+            }
+            for (let y = 0; y < lobbyCanvas.height; y += tileSize) {
+                lobbyCtx.beginPath(); lobbyCtx.moveTo(0, y); lobbyCtx.lineTo(lobbyCanvas.width, y); lobbyCtx.stroke();
+            }
+
+            interactiveZones.forEach(zone => {
+                lobbyCtx.fillStyle = zone.color;
+                lobbyCtx.fillRect(zone.x, zone.y, zone.width, zone.height);
+                lobbyCtx.strokeStyle = '#fff';
+                lobbyCtx.lineWidth = 3;
+                lobbyCtx.strokeRect(zone.x, zone.y, zone.width, zone.height);
+                
+                lobbyCtx.fillStyle = '#000';
+                lobbyCtx.font = 'bold 16px sans-serif';
+                lobbyCtx.textAlign = 'center';
+                lobbyCtx.fillText(zone.label, zone.x + zone.width / 2, zone.y + zone.height / 2 + 6);
+                lobbyCtx.textAlign = 'left';
+            });
+
+            for (const id in otherPlayers) {
+                const p = otherPlayers[id];
+                drawBlockyAvatar(lobbyCtx, p.x, p.y, lobbyPlayer.width, lobbyPlayer.height, p.color || '#888', p.username);
+            }
+
+            if (myData) {
+                drawBlockyAvatar(lobbyCtx, lobbyPlayer.x, lobbyPlayer.y, lobbyPlayer.width, lobbyPlayer.height, lobbyPlayer.color, myData.username + ' (나)');
+            }
+        }
+
+        socket.on('summon_pool_update', ({ pool, timeLeft }) => {
+            const container = document.getElementById('summonRatesContainer');
+            if (container) {
+                container.innerHTML = pool.map(item => `
+                    <div class="tier-rate-row" style="background-color: ${item.color};">
+                        <div style="display:flex; align-items:center; gap:9px;">
+                            <img src="assets/images/${item.tower}.png" style="width:36px; height:36px; object-fit:contain; background:#000; border-radius:6px;">
+                            <span>${item.tier}</span>
+                        </div>
+                        <span>${item.rate}%</span>
+                    </div>
+                `).join('');
+            }
+            updateTimerDisplay(timeLeft);
+        });
+
+        socket.on('pool_timer_update', (timeLeft) => { updateTimerDisplay(timeLeft); });
+
+        function updateTimerDisplay(timeLeft) {
+            const mins = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+            const secs = String(timeLeft % 60).padStart(2, '0');
+            const timerEl = document.getElementById('poolTimerText');
+            if (timerEl) timerEl.innerText = `Reseting in ${mins}:${secs}`;
+        }
+
+        document.getElementById('pull1Btn').addEventListener('click', () => socket.emit('summon_pull', 1));
+        document.getElementById('pull10Btn').addEventListener('click', () => socket.emit('summon_pull', 10));
+
+        socket.on('summon_result', (data) => {
+            myData.coins = data.coins;
+            myData.inventory = data.inventory;
+            processInventory();
+            updateUI();
+            renderInventoryUI();
+            document.getElementById('summonResultText').innerText = `✨ 소환 성공: [${data.results.map(r => r.tower).join(', ')}]`;
+        });
+
+        function getEquippedCountMap() {
+            const countMap = {};
+            if (myData && myData.hotbar) {
+                myData.hotbar.forEach(name => { if (name) countMap[name] = (countMap[name] || 0) + 1; });
+            }
+            return countMap;
+        }
+
+        function renderInventoryUI() {
+            const invContainer = document.getElementById('inventoryContainer');
+            const totalEquippedCounts = getEquippedCountMap();
+            const equippedCounts = {};
+
+            invContainer.innerHTML = myData.inventory.map((item) => {
+                equippedCounts[item.name] = (equippedCounts[item.name] || 0) + 1;
+                const isEquipped = equippedCounts[item.name] <= (totalEquippedCounts[item.name] || 0);
+
+                return `
+                    <div class="inv-item" draggable="${!isEquipped}" ondragstart="${isEquipped ? '' : `onDragInventory(event, ${item.originalIndex})`}" style="background-color: ${item.color || '#e6e6e6'};">
+                        ${isEquipped ? '<span style="position:absolute; top:3px; right:3px; background:#d32f2f; color:#fff; font-size:12px; padding:2px 5px; border-radius:4px; font-weight:bold;">V</span>' : ''}
+                        <img src="assets/images/${item.name}.png" alt="${item.name}">
+                        <span style="background:rgba(0,0,0,0.6); color:#fff; padding:2px 4px; border-radius:4px; font-size:12px;">${item.name}</span>
+                    </div>
+                `;
+            }).join('');
+
+            const hotbarContainer = document.getElementById('modalHotbarSlots');
+            hotbarContainer.innerHTML = myData.hotbar.map((name, idx) => {
+                const stats = name ? (towerStats[name] || { cost: 100 }) : null;
+                return `
+                    <div class="hotbar-slot" draggable="${name ? 'true' : 'false'}" ondragstart="onDragHotbar(event, ${idx})" ondragover="allowDrop(event)" ondrop="dropToHotbar(event, ${idx})" style="width:65px; height:70px; background:rgba(0,0,0,0.3);">
+                        <span class="slot-num">${idx+1}</span>
+                        ${name ? `<img src="assets/images/${name}.png" style="width:30px; height:30px; margin-top:14px;">` : ''}
+                        ${stats ? `<div class="hotbar-cost" style="font-size:11px;">${stats.cost}G</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function allowDrop(ev) { ev.preventDefault(); }
+        function onDragInventory(ev, originalIdx) { ev.dataTransfer.setData('text/plain', JSON.stringify({ type: 'inventory', index: originalIdx })); }
+        function onDragHotbar(ev, slotIdx) { ev.dataTransfer.setData('text/plain', JSON.stringify({ type: 'hotbar', index: slotIdx })); }
+        
+        function dropToHotbar(ev, slotIdx) {
+            ev.preventDefault();
+            const dataStr = ev.dataTransfer.getData('text/plain');
+            if (!dataStr) return;
+            const data = JSON.parse(dataStr);
+            if (data.type === 'inventory') {
+                const item = myData.inventory[data.index];
+                if (item) socket.emit('equip_tower', { slotIndex: slotIdx, towerName: item.name });
+            }
+        }
+
+        function dropToInventory(ev) {
+            ev.preventDefault();
+            const dataStr = ev.dataTransfer.getData('text/plain');
+            if (!dataStr) return;
+            const data = JSON.parse(dataStr);
+            if (data.type === 'hotbar') socket.emit('unequip_slot', data.index);
+        }
+
+        socket.on('hotbar_updated', (newHotbar) => {
+            myData.hotbar = newHotbar;
+            renderInventoryUI();
+            updateHotbarsUI();
+        });
+
+        function updateHotbarsUI() {
+            const containers = [document.getElementById('persistentHotbar'), document.getElementById('gameHotbar')];
+            containers.forEach(container => {
+                if (!container) return;
+                const slots = container.querySelectorAll('.hotbar-slot');
+                slots.forEach((slot, idx) => {
+                    const tName = myData.hotbar[idx];
+                    const img = slot.querySelector('img');
+                    const costEl = slot.querySelector('.hotbar-cost');
+                    if (tName) {
+                        img.src = `assets/images/${tName}.png`;
+                        img.alt = tName;
+                        img.style.display = 'block';
+                        const stats = towerStats[tName] || { cost: 100 };
+                        if (costEl) costEl.innerText = `${stats.cost}G`;
+                    } else {
+                        img.src = ''; img.alt = ''; img.style.display = 'none';
+                        if (costEl) costEl.innerText = '';
+                    }
+                });
+            });
+            selectedTowerName = myData.hotbar[selectedHotbarSlotIdx] || myData.hotbar[0];
+        }
+
+        document.getElementById('createPartyBtn').addEventListener('click', () => {
+            const diff = document.getElementById('difficultySelect').value;
+            socket.emit('create_party', { difficulty: diff });
+        });
+
+        socket.on('party_created', (party) => { currentParty = party; updatePartyUI(); });
+        socket.on('party_list_update', (parties) => {
+            const container = document.getElementById('partyListContainer');
+            if (parties.length === 0) {
+                container.innerHTML = `<p style="font-size: 15px; color: #aaa;">현재 생성된 파티가 없습니다.</p>`;
+                return;
+            }
+            container.innerHTML = parties.map(p => `
+                <div style="background:rgba(255,255,255,0.08); padding:10px; margin-bottom:6px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="font-size:16px;">방장: ${p.host}</strong> | 난이도: <span style="color:#ffeb3b;">${p.difficulty}</span>
+                        <div style="font-size:13px; color:#aaa;">참가자: ${p.members.join(', ')} (${p.members.length}/4)</div>
+                    </div>
+                    <button onclick="joinParty('${p.id}')" style="padding:6px 12px; font-size:13px;">참가하기</button>
+                </div>
+            `).join('');
+        });
+
+        function joinParty(partyId) { socket.emit('join_party', partyId); }
+        socket.on('joined_party_success', (party) => { currentParty = party; updatePartyUI(); });
+        document.getElementById('leavePartyBtn').addEventListener('click', () => { if (currentParty) socket.emit('leave_party', currentParty.id); });
+        socket.on('left_party_success', () => { currentParty = null; updatePartyUI(); });
+        document.getElementById('startGameBtn').addEventListener('click', () => { if (currentParty) socket.emit('start_game', currentParty.id); });
+
+        socket.on('game_started', (party) => {
+            currentParty = party;
+            closeModals();
+            initGame(party.difficulty);
+            showScreen('gameScreen');
+        });
+
+        function updatePartyUI() {
+            const myPartyBox = document.getElementById('myPartyBox');
+            const startGameBtn = document.getElementById('startGameBtn');
+            if (currentParty) {
+                myPartyBox.style.display = 'block';
+                document.getElementById('partyMembersText').innerText = `참가자: ${currentParty.members.join(', ')} | 난이도: ${currentParty.difficulty}`;
+                startGameBtn.style.display = (currentParty.host === myData.username) ? 'inline-block' : 'none';
+            } else {
+                myPartyBox.style.display = 'none';
+            }
+        }
+
+        function initGame(difficulty) {
+            inGameActive = true;
+            towers.length = 0;
+            currentWave = 1;
+            enemies = [];
+            autoSkipEnabled = false;
+            currentDifficulty = difficulty;
+            currentPathWaypoints = getPixelPath(difficulty);
+            document.getElementById('autoSkipBtn').innerText = '오토스킵: OFF';
+
+            if (difficulty === 'Easy') gameCash = 1500;
+            else if (difficulty === 'Normal') gameCash = 1000;
+            else if (difficulty === 'Hard') gameCash = 700;
+            else if (difficulty === 'Extreme') gameCash = 400;
+
+            updateGameUI();
+            startWave();
+            startGameLoop();
+        }
+
+        function updateGameUI() {
+            document.getElementById('cashDisplay').innerText = gameCash;
+            document.getElementById('waveDisplay').innerText = currentWave;
+            document.getElementById('monsterCountDisplay').innerText = enemies.length;
+            document.getElementById('skipButtonsContainer').style.display = 'flex';
+
+            // 스킵 버튼 제어 (몬스터가 5마리 이하일 때만 활성화)
+            const skipWaveBtn = document.getElementById('skipWaveBtn');
+            if (skipWaveBtn) {
+                if (enemies.length <= 5) {
+                    skipWaveBtn.disabled = false;
+                    skipWaveBtn.style.opacity = '1';
+                    skipWaveBtn.style.cursor = 'pointer';
+                } else {
+                    skipWaveBtn.disabled = true;
+                    skipWaveBtn.style.opacity = '0.4';
+                    skipWaveBtn.style.cursor = 'not-allowed';
+                }
+            }
+
+            if (autoSkipEnabled && enemies.length === 0 && currentWave < maxWaves) {
+                currentWave++;
+                startWave();
+            }
+        }
+
+        function startWave() {
+            enemies = [];
+            const isBossWave = (currentWave === maxWaves);
+
+            if (isBossWave) {
+                const type = monsterTypes[Math.floor(Math.random() * monsterTypes.length)];
+                const baseHp = (400 + currentWave * 150) * type.hpMult * 4;
+                const baseSpeed = 1.2 * type.speedMult;
+
+                enemies.push({
+                    x: currentPathWaypoints[0].x,
+                    y: currentPathWaypoints[0].y,
+                    wpIndex: 0,
+                    hp: baseHp,
+                    maxHp: baseHp,
+                    speed: baseSpeed,
+                    originalSpeed: baseSpeed,
+                    slowTimer: 0,
+                    typeName: '거대 보스: ' + type.name,
+                    shape: type.shape,
+                    color: type.color,
+                    isBoss: true
+                });
+            } else {
+                const count = 5 + currentWave * 2;
+                for (let i = 0; i < count; i++) {
+                    const type = monsterTypes[Math.floor(Math.random() * monsterTypes.length)];
+                    const baseHp = (50 + currentWave * 20) * type.hpMult;
+                    const baseSpeed = 2.0 * type.speedMult;
+
+                    enemies.push({
+                        x: currentPathWaypoints[0].x - i * 45,
+                        y: currentPathWaypoints[0].y,
+                        wpIndex: 0,
+                        hp: baseHp,
+                        maxHp: baseHp,
+                        speed: baseSpeed,
+                        originalSpeed: baseSpeed,
+                        slowTimer: 0,
+                        typeName: type.name,
+                        shape: type.shape,
+                        color: type.color,
+                        isBoss: false
+                    });
+                }
+            }
+            updateGameUI();
+        }
+
+        // 스킵 버튼 클릭 이벤트에 5마리 이하 검증 추가
+        document.getElementById('skipWaveBtn').addEventListener('click', () => {
+            if (enemies.length > 5) return; // 5마리 초과일 경우 무시
+            if (currentWave < maxWaves) { currentWave++; startWave(); }
+        });
+
+        document.getElementById('autoSkipBtn').addEventListener('click', () => {
+            autoSkipEnabled = !autoSkipEnabled;
+            document.getElementById('autoSkipBtn').innerText = `오토스킵: ${autoSkipEnabled ? 'ON' : 'OFF'}`;
+            if (autoSkipEnabled && enemies.length === 0 && currentWave < maxWaves) { currentWave++; startWave(); }
+        });
+
+        const gameCanvas = document.getElementById('gameCanvas');
+        const gameCtx = gameCanvas.getContext('2d');
+
+        gameCanvas.addEventListener('mousemove', (e) => {
+            if (!inGameActive) return;
+            const rect = gameCanvas.getBoundingClientRect();
+            const scaleX = gameCanvas.width / rect.width;
+            const scaleY = gameCanvas.height / rect.height;
+            const mouseX = (e.clientX - rect.left) * scaleX;
+            const mouseY = (e.clientY - rect.top) * scaleY;
+
+            hoveredTower = null;
+            towers.forEach(t => {
+                const cx = t.x + tileSize / 2;
+                const cy = t.y + tileSize / 2;
+                if (Math.hypot(cx - mouseX, cy - mouseY) < tileSize / 2) {
+                    hoveredTower = t;
+                }
+            });
+        });
+
+        gameCanvas.addEventListener('mouseleave', () => { hoveredTower = null; });
+
+        function handleCanvasClick(clientX, clientY) {
+            if (!inGameActive) return;
+            const rect = gameCanvas.getBoundingClientRect();
+            const scaleX = gameCanvas.width / rect.width;
+            const scaleY = gameCanvas.height / rect.height;
+            const x = Math.floor(((clientX - rect.left) * scaleX) / tileSize) * tileSize;
+            const y = Math.floor(((clientY - rect.top) * scaleY) / tileSize) * tileSize;
+
+            const clickedTower = towers.find(t => t.x === x && t.y === y);
+            if (clickedTower) {
+                openUpgradeModal(clickedTower);
+                return;
+            }
+
+            if (isPointOnPath(x, y)) {
+                alert('길 위에는 타워를 설치할 수 없습니다!');
+                return;
+            }
+
+            const baseStats = towerStats[selectedTowerName] || { cost: 100, maxLevel: 3, range: 150, damage: 25, cooldownMax: 30 };
+            if (selectedTowerName && !towers.some(t => t.x === x && t.y === y)) {
+                if (gameCash >= baseStats.cost) {
+                    gameCash -= baseStats.cost;
+                    towers.push({ 
+                        x, y, 
+                        name: selectedTowerName, 
+                        level: 1,
+                        maxLevel: baseStats.maxLevel,
+                        range: baseStats.range, 
+                        damage: baseStats.damage, 
+                        cooldownMax: baseStats.cooldownMax, 
+                        cooldown: 0,
+                        slow: baseStats.slow || false
+                    });
+                    updateGameUI();
+                } else {
+                    alert(`캐시가 부족합니다! (필요 캐시: ${baseStats.cost})`);
+                }
+            }
+        }
+
+        function getNextLevelStats(tower) {
+            if (tower.level >= tower.maxLevel) return null;
+            return {
+                level: tower.level + 1,
+                damage: Math.round(tower.damage * 1.3),
+                range: Math.round(tower.range * 1.05),
+                cooldownMax: Math.max(5, Math.round(tower.cooldownMax * 0.9)),
+                cost: tower.level * 90
+            };
+        }
+
+        function openUpgradeModal(tower) {
+            selectedTowerInstance = tower;
+            document.getElementById('upgradeTowerTitle').innerText = `${tower.name} (Lv.${tower.level} / Max.${tower.maxLevel})`;
+            
+            const infoDiv = document.getElementById('upgradeTowerInfo');
+            const nextStats = getNextLevelStats(tower);
+            let currentAttackSpeed = (30 / tower.cooldownMax).toFixed(1) + '회/초';
+            let html = `
+                <div><strong>[ 현재 능력치 ]</strong></div>
+                <div>• 데미지: ${tower.damage}</div>
+                <div>• 범위: ${tower.range}</div>
+                <div>• 공격속도: ${currentAttackSpeed}</div>
+                <hr style="border-color:rgba(255,255,255,0.2); margin:12px 0;">
+            `;
+
+            if (nextStats) {
+                let nextAttackSpeed = (30 / nextStats.cooldownMax).toFixed(1) + '회/초';
+                html += `
+                    <div><strong>[ 다음 레벨 (Lv.${nextStats.level}) 능력치 ]</strong></div>
+                    <div>• 데미지: ${nextStats.damage}</div>
+                    <div>• 범위: ${nextStats.range}</div>
+                    <div>• 공격속도: ${nextAttackSpeed}</div>
+                    <div style="margin-top:8px; color:#ffeb3b;">업그레이드 비용: ${nextStats.cost}G</div>
+                `;
+                document.getElementById('upgradeActionBtn').style.display = 'block';
+                document.getElementById('upgradeActionBtn').innerText = `업그레이드 (${nextStats.cost}G)`;
+            } else {
+                html += `<div style="color:#ffeb3b; font-weight:bold;">최대 레벨에 도달했습니다!</div>`;
+                document.getElementById('upgradeActionBtn').style.display = 'none';
+            }
+
+            infoDiv.innerHTML = html;
+            openModal('upgradeModal');
+        }
+
+        document.getElementById('upgradeActionBtn').addEventListener('click', () => {
+            if (!selectedTowerInstance) return;
+            const nextStats = getNextLevelStats(selectedTowerInstance);
+            if (!nextStats) return;
+
+            if (gameCash >= nextStats.cost) {
+                gameCash -= nextStats.cost;
+                selectedTowerInstance.level = nextStats.level;
+                selectedTowerInstance.damage = nextStats.damage;
+                selectedTowerInstance.range = nextStats.range;
+                selectedTowerInstance.cooldownMax = nextStats.cooldownMax;
+                updateGameUI();
+                closeModals();
+            } else {
+                alert('업그레이드 캐시가 부족합니다!');
+            }
+        });
+
+        gameCanvas.addEventListener('click', (e) => { handleCanvasClick(e.clientX, e.clientY); });
+        gameCanvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (e.touches.length > 0) handleCanvasClick(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: false });
+
+        function startGameLoop() {
+            if (gameLoopInterval) clearInterval(gameLoopInterval);
+            gameLoopInterval = setInterval(() => {
+                if (!inGameActive) return;
+
+                enemies.forEach((en, idx) => {
+                    if (en.slowTimer > 0) {
+                        en.slowTimer--;
+                        en.speed = en.originalSpeed * 0.5;
+                    } else {
+                        en.speed = en.originalSpeed;
+                    }
+
+                    const targetWp = currentPathWaypoints[en.wpIndex + 1];
+                    if (!targetWp) return;
+
+                    const dx = targetWp.x - en.x;
+                    const dy = targetWp.y - en.y;
+                    const dist = Math.hypot(dx, dy);
+
+                    if (dist < en.speed) {
+                        en.x = targetWp.x;
+                        en.y = targetWp.y;
+                        en.wpIndex++;
+                        if (en.wpIndex >= currentPathWaypoints.length - 1) enemies.splice(idx, 1);
+                    } else {
+                        en.x += (dx / dist) * en.speed;
+                        en.y += (dy / dist) * en.speed;
+                    }
+                });
+
+                towers.forEach(t => {
+                    if (t.cooldown > 0) t.cooldown--;
+                    else {
+                        const target = enemies.find(en => Math.hypot((t.x + tileSize/2) - en.x, (t.y + tileSize/2) - en.y) <= t.range);
+                        if (target) {
+                            target.hp -= t.damage;
+                            if (t.slow) target.slowTimer = 40;
+                            t.cooldown = t.cooldownMax;
+                            if (target.hp <= 0) gameCash += target.isBoss ? 200 : 20;
+                        }
+                    }
+                });
+
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    if (enemies[i].hp <= 0 || enemies[i].wpIndex >= currentPathWaypoints.length - 1) enemies.splice(i, 1);
+                }
+
+                if (enemies.length === 0) {
+                    if (currentWave < maxWaves) {
+                        currentWave++;
+                        startWave();
+                    } else {
+                        clearInterval(gameLoopInterval);
+                        inGameActive = false;
+                        socket.emit('clear_game', { difficulty: currentParty ? currentParty.difficulty : 'Easy' });
+                    }
+                }
+
+                updateGameUI();
+                drawGame();
+            }, 1000 / 30);
+        }
+
+        function stopGameLoop() { if (gameLoopInterval) clearInterval(gameLoopInterval); }
+
+        socket.on('clear_reward_success', (data) => {
+            myData.coins = data.coins;
+            myData.wins = data.wins;
+            updateUI();
+            document.getElementById('clearRewardText').innerText = `모든 웨이브 클리어! 보상 코인 +${data.rewardCoins}, 승수 +${data.rewardWins}`;
+            openModal('clearModal');
+        });
+
+        document.getElementById('clearLobbyBtn').addEventListener('click', () => { closeModals(); showScreen('lobbyScreen'); });
+        document.getElementById('clearRetryBtn').addEventListener('click', () => {
+            closeModals();
+            if (currentParty) { initGame(currentParty.difficulty); showScreen('gameScreen'); }
+            else showScreen('lobbyScreen');
+        });
+
+        function drawShapeMonster(ctx, en) {
+            ctx.fillStyle = en.slowTimer > 0 ? '#00bcd4' : en.color;
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = en.isBoss ? 4 : 2;
+
+            const size = en.isBoss ? 32 : 14;
+            const hpBarWidth = en.isBoss ? 64 : 36;
+            const hpBarHeight = en.isBoss ? 8 : 6;
+            const hpBarOffset = en.isBoss ? 42 : 25;
+
+            ctx.beginPath();
+            if (en.shape === 'circle') {
+                ctx.arc(en.x, en.y, size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            } else if (en.shape === 'triangle') {
+                ctx.moveTo(en.x, en.y - size * 1.2);
+                ctx.lineTo(en.x - size, en.y + size * 0.8);
+                ctx.lineTo(en.x + size, en.y + size * 0.8);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            } else if (en.shape === 'square') {
+                ctx.fillRect(en.x - size, en.y - size, size * 2, size * 2);
+                ctx.strokeRect(en.x - size, en.y - size, size * 2, size * 2);
+            } else if (en.shape === 'polygon') {
+                ctx.moveTo(en.x, en.y - size * 1.2);
+                ctx.lineTo(en.x + size, en.y);
+                ctx.lineTo(en.x, en.y + size * 1.2);
+                ctx.lineTo(en.x - size, en.y);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(en.x - hpBarWidth / 2, en.y - hpBarOffset, hpBarWidth, hpBarHeight);
+            ctx.fillStyle = en.isBoss ? '#e91e63' : '#4caf50';
+            ctx.fillRect(en.x - hpBarWidth / 2, en.y - hpBarOffset, hpBarWidth * (en.hp / en.maxHp), hpBarHeight);
+
+            if (en.isBoss) {
+                ctx.fillStyle = '#ffeb3b';
+                ctx.font = 'bold 12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('BOSS', en.x, en.y - hpBarOffset - 5);
+                ctx.textAlign = 'left';
+            }
+        }
+
+        function drawGame() {
+            gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+            
+            gameCtx.strokeStyle = '#555';
+            gameCtx.lineWidth = tileSize * 0.8;
+            gameCtx.lineCap = 'round';
+            gameCtx.lineJoin = 'round';
+            gameCtx.beginPath();
+            currentPathWaypoints.forEach((wp, idx) => {
+                if (idx === 0) gameCtx.moveTo(wp.x, wp.y);
+                else gameCtx.lineTo(wp.x, wp.y);
+            });
+            gameCtx.stroke();
+
+            gameCtx.strokeStyle = '#252525';
+            gameCtx.lineWidth = 1.5;
+            for (let x = 0; x < gameCanvas.width; x += tileSize) {
+                gameCtx.beginPath(); gameCtx.moveTo(x, 0); gameCtx.lineTo(x, gameCanvas.height); gameCtx.stroke();
+            }
+            for (let y = 0; y < gameCanvas.height; y += tileSize) {
+                gameCtx.beginPath(); gameCtx.moveTo(0, y); gameCtx.lineTo(gameCanvas.width, y); gameCtx.stroke();
+            }
+
+            towers.forEach(t => {
+                const img = towerImages[t.name];
+                if (img && img.complete && img.naturalHeight !== 0) {
+                    gameCtx.drawImage(img, t.x + 3, t.y + 3, tileSize - 6, tileSize - 6);
+                } else {
+                    gameCtx.fillStyle = '#ff5252';
+                    gameCtx.fillRect(t.x + 6, t.y + 6, tileSize - 12, tileSize - 12);
+                }
+                gameCtx.fillStyle = '#ffd700';
+                gameCtx.font = 'bold 14px sans-serif';
+                gameCtx.fillText(`Lv.${t.level}`, t.x + 6, t.y + 20);
+            });
+
+            if (hoveredTower) {
+                gameCtx.save();
+                gameCtx.beginPath();
+                gameCtx.arc(hoveredTower.x + tileSize/2, hoveredTower.y + tileSize/2, hoveredTower.range, 0, Math.PI * 2);
+                gameCtx.fillStyle = 'rgba(0, 150, 255, 0.15)';
+                gameCtx.fill();
+                gameCtx.strokeStyle = 'rgba(0, 150, 255, 0.8)';
+                gameCtx.lineWidth = 3;
+                gameCtx.stroke();
+                gameCtx.restore();
+            }
+
+            enemies.forEach(en => {
+                drawShapeMonster(gameCtx, en);
+            });
+        }
+
+        socket.on('rankings_update', ({ coinRanking, winRanking }) => {
+            document.getElementById('coinRankList').innerHTML = coinRanking.map((u, i) => `
+                <li><span>${i+1}. ${u.username}</span> <strong>${u.coins}🪙</strong></li>
+            `).join('');
+            document.getElementById('winRankList').innerHTML = winRanking.map((u, i) => `
+                <li><span>${i+1}. ${u.username}</span> <strong>${u.wins}승</strong></li>
+            `).join('');
+        });
+
+        socket.on('other_player_moved', (user) => { otherPlayers[user.id] = user; });
+        socket.on('player_left', (id) => { delete otherPlayers[id]; });
+
+        document.querySelectorAll('.persistent-hotbar').forEach(hotbarEl => {
+            const slots = hotbarEl.querySelectorAll('.hotbar-slot');
+            slots.forEach(slot => {
+                slot.addEventListener('click', () => {
+                    slots.forEach(s => s.classList.remove('active'));
+                    slot.classList.add('active');
+                    selectedHotbarSlotIdx = parseInt(slot.getAttribute('data-index'));
+                    selectedTowerName = myData.hotbar[selectedHotbarSlotIdx];
+                });
+            });
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key >= '1' && e.key <= '5') {
+                selectedHotbarSlotIdx = parseInt(e.key) - 1;
+                const hb = document.getElementById('gameHotbar');
+                if (hb) {
+                    const slots = hb.querySelectorAll('.hotbar-slot');
+                    slots.forEach(s => s.classList.remove('active'));
+                    const target = hb.querySelector(`.hotbar-slot[data-index="${selectedHotbarSlotIdx}"]`);
+                    if (target) target.classList.add('active');
+                }
+                if (myData) selectedTowerName = myData.hotbar[selectedHotbarSlotIdx];
+            }
+        });
+
+        socket.on('alert', (msg) => alert(msg));
+    </script>
+</body>
+</html>
