@@ -163,7 +163,6 @@ io.on('connection', (socket) => {
         activeUsers[socket.id] = user;
         socket.emit('login_success', user);
         
-        // ★ [요청 1 해결] 늦게 들어온 유저가 기존에 접속해 있는 유저들을 볼 수 있도록 목록 전송
         const currentActivePlayers = {};
         for (const sId in activeUsers) {
             if (sId !== socket.id) {
@@ -187,7 +186,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // ★ [요청 2 해결] 다른 플레이어의 핫바 및 스탯 조회 기능
     socket.on('get_player_info', (targetUsername) => {
         let targetUser = null;
         for (const sId in activeUsers) {
@@ -212,6 +210,9 @@ io.on('connection', (socket) => {
         }
     });
 
+    // ==========================================
+    // 1. 소환(Summon) 관련 로직
+    // ==========================================
     socket.on('summon_pull', (count) => {
         const user = activeUsers[socket.id];
         const cost = count === 10 ? 900 : 100;
@@ -231,6 +232,95 @@ io.on('connection', (socket) => {
         broadcastRankings();
     });
 
+    // ==========================================
+    // 2. 거래(Trade) 시스템 로직 (소환과 인벤토리 사이에 배치)
+    // ==========================================
+    // server.js 내 거래 관련 이벤트 로직 수정
+    socket.on('request_trade', ({ targetUsername, offerCoins, offerItem }) => {
+        let targetSocketId = null;
+        for (const sId in activeUsers) {
+            if (activeUsers[sId].username === targetUsername) {
+                targetSocketId = sId;
+                break;
+            }
+        }
+        if (targetSocketId) {
+            io.to(targetSocketId).emit('trade_request', {
+                from: activeUsers[socket.id].username,
+                offerCoins,
+                offerItem
+            });
+        } else {
+            socket.emit('alert', '상대방이 접속 중이 아닙니다.');
+        }
+    });
+
+    socket.on('respond_trade', ({ fromUsername, accept, offerCoins, offerItem }) => {
+        let targetSocketId = null;
+        let targetUserObj = null;
+        for (const sId in activeUsers) {
+            if (activeUsers[sId].username === fromUsername) {
+                targetSocketId = sId;
+                targetUserObj = activeUsers[sId];
+                break;
+            }
+        }
+        const currentUser = activeUsers[socket.id];
+        if (!targetUserObj || !currentUser) return;
+
+        if (accept) {
+            // 수락한 사람(currentUser)과 요청한 사람(targetUserObj) 간의 자산 교환
+            currentUser.coins += offerCoins;
+            targetUserObj.coins -= offerCoins;
+
+            if (offerItem) {
+                targetUserObj.inventory = targetUserObj.inventory.filter(i => i.name !== offerItem.name);
+                currentUser.inventory.push(offerItem);
+            }
+            saveUsers();
+            
+            socket.emit('trade_success', { coins: currentUser.coins, inventory: currentUser.inventory });
+            io.to(targetSocketId).emit('trade_success', { coins: targetUserObj.coins, inventory: targetUserObj.inventory });
+        } else {
+            if (targetSocketId) {
+                io.to(targetSocketId).emit('alert', `${currentUser.username} 님이 거래를 거절했습니다.`);
+            }
+        }
+    });
+
+    socket.on('respond_trade', ({ fromUsername, accept, offerCoins, offerItem }) => {
+        let targetSocketId = null;
+        let targetUserObj = null;
+        for (const sId in activeUsers) {
+            if (activeUsers[sId].username === fromUsername) {
+                targetSocketId = sId;
+                targetUserObj = activeUsers[sId];
+                break;
+            }
+        }
+        const currentUser = activeUsers[socket.id];
+        if (!targetUserObj || !currentUser) return;
+
+        if (accept) {
+            currentUser.coins += offerCoins;
+            targetUserObj.coins -= offerCoins;
+            if (offerItem) {
+                targetUserObj.inventory = targetUserObj.inventory.filter(i => i.name !== offerItem.name);
+                currentUser.inventory.push(offerItem);
+            }
+            saveUsers();
+            socket.emit('trade_success', { coins: currentUser.coins, inventory: currentUser.inventory });
+            io.to(targetSocketId).emit('trade_success', { coins: targetUserObj.coins, inventory: targetUserObj.inventory });
+        } else {
+            if (targetSocketId) {
+                io.to(targetSocketId).emit('alert', `${currentUser.username} 님이 거래를 거절했습니다.`);
+            }
+        }
+    });
+
+    // ==========================================
+    // 3. 인벤토리(Inventory) 및 핫바 장착 관련 로직
+    // ==========================================
     socket.on('equip_tower', ({ slotIndex, towerName }) => {
         const user = activeUsers[socket.id];
         if (user) {
@@ -321,63 +411,10 @@ io.on('connection', (socket) => {
         }
     });
 
-    // ★ [요청 3 해결] 파티원 간 인게임플레이 동기화 (타워 설치 및 업그레이드 등 공유)
     socket.on('party_action', (data) => {
         const user = activeUsers[socket.id];
         if (!user || !user.currentPartyId) return;
         io.to(user.currentPartyId).emit('party_action_broadcast', { sender: user.username, ...data });
-    });
-
-    // ★ [요청 5 해결] 1:1 거래 시스템 이벤트 처리
-    socket.on('request_trade', ({ targetUsername, offerCoins, offerItem }) => {
-        let targetSocketId = null;
-        for (const sId in activeUsers) {
-            if (activeUsers[sId].username === targetUsername) {
-                targetSocketId = sId;
-                break;
-            }
-        }
-        if (targetSocketId) {
-            io.to(targetSocketId).emit('trade_request', {
-                from: activeUsers[socket.id].username,
-                offerCoins,
-                offerItem
-            });
-        } else {
-            socket.emit('alert', '상대방이 접속 중이 아닙니다.');
-        }
-    });
-
-    socket.on('respond_trade', ({ fromUsername, accept, offerCoins, offerItem }) => {
-        // 거래 수락 시 양측 유저 간 아이템 및 코인 안전 스왑 처리 로직
-        let targetSocketId = null;
-        let targetUserObj = null;
-        for (const sId in activeUsers) {
-            if (activeUsers[sId].username === fromUsername) {
-                targetSocketId = sId;
-                targetUserObj = activeUsers[sId];
-                break;
-            }
-        }
-        const currentUser = activeUsers[socket.id];
-        if (!targetUserObj || !currentUser) return;
-
-        if (accept) {
-            // 간단 교환 검증 및 처리
-            currentUser.coins += offerCoins;
-            targetUserObj.coins -= offerCoins;
-            if (offerItem) {
-                targetUserObj.inventory = targetUserObj.inventory.filter(i => i.name !== offerItem.name);
-                currentUser.inventory.push(offerItem);
-            }
-            saveUsers();
-            socket.emit('trade_success', { coins: currentUser.coins, inventory: currentUser.inventory });
-            io.to(targetSocketId).emit('trade_success', { coins: targetUserObj.coins, inventory: targetUserObj.inventory });
-        } else {
-            if (targetSocketId) {
-                io.to(targetSocketId).emit('alert', `${currentUser.username} 님이 거래를 거절했습니다.`);
-            }
-        }
     });
 
     socket.on('clear_game', ({ difficulty, partyId }) => {
@@ -437,6 +474,104 @@ function broadcastRankings() {
     const winRanking = [...userList].sort((a, b) => b.wins - a.wins).slice(0, 100);
     io.emit('rankings_update', { coinRanking, winRanking });
 }
+
+// TRADE 구역 클릭 시 접속 중인 플레이어 목록 선택 모달 띄우기
+{ x: 15, y: 320, width: 80, height: 80, color: '#ff9800', label: 'TRADE', action: () => { 
+    openTradeUserSelectModal(); 
+} }
+
+function openTradeUserSelectModal() {
+    let listHtml = `<h3 style="text-align:center;">거래할 플레이어 선택</h3><div style="max-height:150px; overflow-y:auto;">`;
+    const activeEntries = Object.entries(otherPlayers);
+    if (activeEntries.length === 0) {
+        listHtml += `<p style="text-align:center; color:#aaa; font-size:11px;">현재 접속 중인 다른 유저가 없습니다.</p>`;
+    } else {
+        activeEntries.forEach(([sId, p]) => {
+            listHtml += `<div style="background:rgba(0,0,0,0.3); padding:6px; margin-bottom:4px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+                <span>${p.username}</span>
+                <button onclick="startTradeWith('${p.username}')" style="padding:2px 6px; font-size:10px; background:#1976d2;">거래 신청</button>
+            </div>`;
+        });
+    }
+    listHtml += `</div>`;
+    
+    // 임시 모달 창 활용 또는 플레이어 정보창 연동
+    document.getElementById('targetUsernameTitle').innerText = "거래 대상 선택";
+    document.getElementById('targetCoinDisplay').innerText = "-";
+    document.getElementById('targetWinDisplay').innerText = "-";
+    document.getElementById('targetHotbarContainer').innerHTML = listHtml;
+    document.getElementById('openTradeBtn').style.display = 'none';
+    openModal('playerInfoModal');
+}
+
+function startTradeWith(targetUsername) {
+    closeModals();
+    setupTradeUI(targetUsername);
+    openModal('tradeModal');
+}
+
+let currentTradingPartner = null;
+
+function setupTradeUI(targetUsername) {
+    currentTradingPartner = targetUsername;
+    document.getElementById('tradeTargetTitle').innerText = `${targetUsername} 님의 제안`;
+    
+    const select = document.getElementById('tradeOfferItemSelect');
+    select.innerHTML = '<option value="">선택 안 함</option>';
+    if (myData && myData.inventory) {
+        myData.inventory.forEach((item, idx) => {
+            const opt = document.createElement('option');
+            opt.value = idx;
+            opt.innerText = `${item.name} (${item.tier})`;
+            select.appendChild(opt);
+        });
+    }
+
+    document.getElementById('sendTradeOfferBtn').onclick = () => {
+        const offerCoins = parseInt(document.getElementById('tradeOfferCoins').value) || 0;
+        const selectedIdx = select.value;
+        const offerItem = (selectedIdx !== "" && myData && myData.inventory) ? myData.inventory[selectedIdx] : null;
+        
+        // 서버로 거래 요청 전송
+        socket.emit('request_trade', { targetUsername: currentTradingPartner, offerCoins, offerItem });
+        alert(`${targetUsername} 님에게 거래 제안을 보냈습니다. 상대방의 수락을 기다립니다.`);
+    };
+}
+
+// 상대방이 거래를 신청했을 때 창을 띄우고 상대방의 Offer를 보여줌
+socket.on('trade_request', ({ from, offerCoins, offerItem }) => {
+    currentTradingPartner = from;
+    openModal('tradeModal');
+    document.getElementById('tradeTargetTitle').innerText = `${from} 님의 제안`;
+    document.getElementById('targetOfferDesc').innerHTML = `
+        <div>🪙 코인: <b>${offerCoins}G</b></div>
+        <div>📦 아이템: <b>${offerItem ? offerItem.name : '없음'}</b></div>
+    `;
+    
+    // 수락 버튼 클릭 시 동작 변경
+    document.getElementById('sendTradeOfferBtn').onclick = () => {
+        const myOfferCoins = parseInt(document.getElementById('tradeOfferCoins').value) || 0;
+        const selectedIdx = document.getElementById('tradeOfferItemSelect').value;
+        const myOfferItem = (selectedIdx !== "" && myData && myData.inventory) ? myData.inventory[selectedIdx] : null;
+
+        socket.emit('respond_trade', { 
+            fromUsername: from, 
+            accept: true, 
+            offerCoins: myOfferCoins, 
+            offerItem: myOfferItem 
+        });
+        closeModals();
+    };
+});
+
+socket.on('trade_success', (data) => {
+    myData.coins = data.coins;
+    myData.inventory = data.inventory;
+    processInventory();
+    updateUI();
+    alert('거래가 성공적으로 완료되었습니다!');
+    closeModals();
+});
 
 server.listen(process.env.PORT || 3000, () => {
     console.log('게임 서버 실행 중 (포트 3000)');
