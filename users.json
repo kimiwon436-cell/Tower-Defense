@@ -1,0 +1,330 @@
+{
+  "kimsiwon28": {
+    "username": "kimsiwon28",
+    "password": "kimkimkim",
+    "coins": 0,
+    "wins": 1,
+    "x": 146.5,
+    "y": 475.5,
+    "color": "#c0879b",
+    "hotbar": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "inventory": [
+      {
+        "name": "Archer",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Cannon",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Fire",
+        "tier": "Rare",
+        "color": "#4da6ff"
+      },
+      {
+        "name": "Ice",
+        "tier": "Epic",
+        "color": "#b19cd9"
+      },
+      {
+        "name": "Sniper",
+        "tier": "Legendary",
+        "color": "#ffd700"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Laser",
+        "tier": "Rare",
+        "color": "#4da6ff"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Laser",
+        "tier": "Epic",
+        "color": "#b19cd9"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Laser",
+        "tier": "Rare",
+        "color": "#4da6ff"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Laser",
+        "tier": "Rare",
+        "color": "#4da6ff"
+      },
+      {
+        "name": "Laser",
+        "tier": "Epic",
+        "color": "#b19cd9"
+      },
+      {
+        "name": "Laser",
+        "tier": "Rare",
+        "color": "#4da6ff"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Laser",
+        "tier": "Rare",
+        "color": "#4da6ff"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Laser",
+        "tier": "Epic",
+        "color": "#b19cd9"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Laser",
+        "tier": "Rare",
+        "color": "#4da6ff"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Laser",
+        "tier": "Rare",
+        "color": "#4da6ff"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      },
+      {
+        "name": "Fire",
+        "tier": "Uncommon",
+        "color": "#2eb82e"
+      },
+      {
+        "name": "Upgrade_Cannon",
+        "tier": "Common",
+        "color": "#e6e6e6"
+      }
+    ]
+  }
+}
