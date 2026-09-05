@@ -25,7 +25,6 @@
             .game-top-panel { max-width: 480px; font-size: 12px; padding: 4px 6px; }
             #joystickContainer { display: block; }
             
-            /* 모바일 환경: UI 영역(상단 패널, 핫바 등)을 제외하고 맵 크기를 약 50px 축소 */
             #gameCanvas {
                 width: calc(100% - 50px) !important;
                 max-width: calc(480px - 50px) !important;
@@ -38,7 +37,6 @@
             #gameCanvas { width: 1080px; height: 720px; }
             #joystickContainer { display: none !important; }
             
-            /* PC 환경 모달 1.5배 확대 및 여백 축소 */
             .modal-content {
                 transform: scale(1.5);
                 transform-origin: center;
@@ -65,7 +63,6 @@
                 max-height: 60px !important;
             }
 
-            /* PC 환경 핫바 크기 키우기 */
             .persistent-hotbar {
                 padding: 6px 8px !important;
                 gap: 6px !important;
@@ -164,6 +161,36 @@
         <p style="font-size: 10px; color: #aaa; margin: 3px 0;">
             🟨 좌상단: 소환소 | 🟩 우상단: 파티 | 🟪 좌하단: 인벤토리 | 🟥 우하단: 랭킹
         </p>
+    </div>
+
+    <!-- 추가된 플레이어 정보 모달 -->
+    <div id="playerInfoModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 300px;">
+            <button class="close-modal" onclick="closeModals()">✕</button>
+            <h3 id="targetUsernameTitle">플레이어 정보</h3>
+            <p style="font-size:11px; margin:2px 0;">코인: <span id="targetCoinDisplay">0</span> | 승수: <span id="targetWinDisplay">0</span></p>
+            
+            <h4 style="font-size:12px; margin:6px 0 2px 0;">장착된 핫바 (타인의 타워는 업그레이드 불가, 스탯만 열람 가능)</h4>
+            <div id="targetHotbarContainer" style="display:flex; gap:4px; justify-content:center; margin-bottom:8px;"></div>
+            
+            <button id="openTradeBtn" style="background:#ff9800; width:100%; font-size:12px;">1:1 거래 신청하기</button>
+        </div>
+    </div>
+
+    <!-- 추가된 거래 모달 -->
+    <div id="tradeModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 320px;">
+            <button class="close-modal" onclick="closeModals()">✕</button>
+            <h3>🤝 플레이어 간 거래</h3>
+            <div id="tradeContentArea">
+                <p style="font-size:11px;">상대방과 코인 및 아이템을 교환합니다.</p>
+                <label style="font-size:11px;">제안할 코인:</label>
+                <input type="number" id="tradeOfferCoins" value="0" style="width:100%;">
+                <label style="font-size:11px; margin-top:4px; display:block;">제안할 아이템 (인벤토리에서 선택):</label>
+                <select id="tradeOfferItemSelect" style="width:100%;"></select>
+                <button id="sendTradeOfferBtn" style="background:#2e7d32; width:100%; margin-top:8px;">거래 제안 전송</button>
+            </div>
+        </div>
     </div>
 
     <div id="summonModal" class="modal-overlay">
@@ -648,6 +675,143 @@
             }
         }
 
+        // --- [요청 1 해결] 접속 동기화 처리 ---
+        socket.on('current_players', (players) => {
+            for (const id in players) {
+                otherPlayers[id] = players[id];
+            }
+        });
+
+        socket.on('player_joined', ({ id, user }) => {
+            otherPlayers[id] = user;
+        });
+
+        socket.on('player_left', (id) => {
+            delete otherPlayers[id];
+        });
+
+        socket.on('other_player_moved', (user) => {
+            for (const id in otherPlayers) {
+                if (otherPlayers[id].username === user.username) {
+                    otherPlayers[id].x = user.x;
+                    otherPlayers[id].y = user.y;
+                }
+            }
+        });
+
+        // --- [요청 2, 4 해결] 로비에서 다른 플레이어 클릭 시 정보 및 핫바 확인 ---
+        if (lobbyCanvas) {
+            lobbyCanvas.addEventListener('click', (e) => {
+                const rect = lobbyCanvas.getBoundingClientRect();
+                const clickX = (e.clientX - rect.left) * (lobbyCanvas.width / rect.width);
+                const clickY = (e.clientY - rect.top) * (lobbyCanvas.height / rect.height);
+
+                for (const id in otherPlayers) {
+                    const p = otherPlayers[id];
+                    if (clickX >= p.x - 15 && clickX <= p.x + 40 && clickY >= p.y - 15 && clickY <= p.y + 50) {
+                        socket.emit('get_player_info', p.username);
+                        return;
+                    }
+                }
+            });
+        }
+
+        socket.on('player_info_result', (info) => {
+            document.getElementById('targetUsernameTitle').innerText = `${info.username} 님의 정보`;
+            document.getElementById('targetCoinDisplay').innerText = info.coins;
+            document.getElementById('targetWinDisplay').innerText = info.wins;
+
+            const hbContainer = document.getElementById('targetHotbarContainer');
+            hbContainer.innerHTML = '';
+            
+            (info.hotbar || []).forEach((towerName) => {
+                const slot = document.createElement('div');
+                slot.className = 'hotbar-slot';
+                slot.style.width = '42px';
+                slot.style.height = '48px';
+                slot.innerHTML = `<img src="assets/images/${towerName}.png" alt="${towerName}" style="width:22px;height:22px;margin-top:8px;"><div class="hotbar-cost" style="font-size:8px;">${towerStats[towerName]?.damage ? 'DMG:'+towerStats[towerName].damage : ''}</div>`;
+                
+                slot.addEventListener('click', () => {
+                    const stat = towerStats[towerName];
+                    alert(`[${towerName} 스탯 정보]\n- 공격력: ${stat?.damage || 0}\n- 사거리: ${stat?.range || 0}\n- 비용: ${stat?.cost || 0}G\n(※ 다른 플레이어의 타워는 업그레이드할 수 없습니다.)`);
+                });
+                hbContainer.appendChild(slot);
+            });
+
+            document.getElementById('openTradeBtn').onclick = () => {
+                closeModals();
+                openModal('tradeModal');
+                setupTradeUI(info.username);
+            };
+
+            openModal('playerInfoModal');
+        });
+
+        // --- [요청 3 해결] 파티원 간 게임 연동 (캐시 및 웨이브 공유) ---
+        socket.on('start_game_client', (party) => {
+            currentParty = party;
+            currentDifficulty = party.difficulty;
+            gameCash = party.cash || 1000;
+            currentWave = party.wave || 1;
+            currentPathWaypoints = getPixelPath(currentDifficulty);
+            inGameActive = true;
+            showScreen('gameScreen');
+            startGameLoop();
+        });
+
+        function syncPartyAction(actionType, data) {
+            if (currentParty) {
+                socket.emit('party_action', { type: actionType, ...data });
+            }
+        }
+
+        socket.on('party_action_broadcast', (data) => {
+            if (data.sender === myData.username) return;
+            if (data.type === 'place_tower') {
+                towers.push(data.tower);
+                gameCash = data.remainingCash;
+                document.getElementById('cashDisplay').innerText = gameCash;
+            } else if (data.type === 'upgrade_tower') {
+                const target = towers.find(t => t.x === data.x && t.y === data.y);
+                if (target) {
+                    target.level = data.level;
+                    target.damage = data.damage;
+                }
+            }
+        });
+
+        // --- [요청 5 해결] 거래 시스템 프론트엔드 연동 ---
+        function setupTradeUI(targetUsername) {
+            const select = document.getElementById('tradeOfferItemSelect');
+            select.innerHTML = '';
+            if (myData && myData.inventory) {
+                myData.inventory.forEach((item, idx) => {
+                    const opt = document.createElement('option');
+                    opt.value = idx;
+                    opt.innerText = `${item.name} (${item.tier})`;
+                    select.appendChild(opt);
+                });
+            }
+
+            document.getElementById('sendTradeOfferBtn').onclick = () => {
+                const offerCoins = parseInt(document.getElementById('tradeOfferCoins').value) || 0;
+                const selectedIdx = select.value;
+                const offerItem = (myData && myData.inventory) ? myData.inventory[selectedIdx] : null;
+
+                socket.emit('request_trade', { targetUsername, offerCoins, offerItem });
+                alert(`${targetUsername} 님에게 거래를 신청했습니다.`);
+                closeModals();
+            };
+        }
+
+        socket.on('trade_request', ({ from, offerCoins, offerItem }) => {
+            if (confirm(`${from} 님으로부터 거래 요청이 왔습니다.\n- 제안 코인: ${offerCoins}G\n- 제안 아이템: ${offerItem ? offerItem.name : '없음'}\n수락하시겠습니까?`)) {
+                socket.emit('respond_trade', { fromUsername: from, accept: true, offerCoins, offerItem });
+            } else {
+                socket.emit('respond_trade', { fromUsername: from, accept: false });
+            }
+        });
+
         socket.on('summon_pool_update', ({ pool, timeLeft }) => {
             const container = document.getElementById('summonRatesContainer');
             if (container) {
@@ -893,16 +1057,16 @@
                     color: type.color,
                     isBoss: true
                 });
-	    } else {
+            } else {
                 const count = 5 + currentWave * 2;
                 for (let i = 0; i < count; i++) {
                     const type = monsterTypes[Math.floor(Math.random() * monsterTypes.length)];
                     const baseHp = (50 + currentWave * 20) * type.hpMult;
                     const baseSpeed = 1.8 * type.speedMult;
-	    
+    
                     enemies.push({
-                        x: currentPathWaypoints[0].x, // 👈 몬스터들이 같은 위치(시작점 X좌표)에 스폰됩니다.
-                        y: currentPathWaypoints[0].y, // 👈 몬스터들이 같은 위치(시작점 Y좌표)에 스폰됩니다.
+                        x: currentPathWaypoints[0].x,
+                        y: currentPathWaypoints[0].y,
                         wpIndex: 0,
                         hp: baseHp,
                         maxHp: baseHp,
@@ -976,7 +1140,7 @@
             if (selectedTowerName && !towers.some(t => t.x === x && t.y === y)) {
                 if (gameCash >= baseStats.cost) {
                     gameCash -= baseStats.cost;
-                    towers.push({ 
+                    const newTower = { 
                         x, y, 
                         name: selectedTowerName, 
                         level: 1,
@@ -986,7 +1150,9 @@
                         cooldownMax: baseStats.cooldownMax, 
                         cooldown: 0,
                         slow: baseStats.slow || false
-                    });
+                    };
+                    towers.push(newTower);
+                    syncPartyAction('place_tower', { tower: newTower, remainingCash: gameCash });
                     updateGameUI();
                 } else {
                     alert(`캐시가 부족합니다! (필요 캐시: ${baseStats.cost})`);
@@ -1049,6 +1215,14 @@
                 selectedTowerInstance.damage = nextStats.damage;
                 selectedTowerInstance.range = nextStats.range;
                 selectedTowerInstance.cooldownMax = nextStats.cooldownMax;
+                
+                syncPartyAction('upgrade_tower', {
+                    x: selectedTowerInstance.x,
+                    y: selectedTowerInstance.y,
+                    level: selectedTowerInstance.level,
+                    damage: selectedTowerInstance.damage
+                });
+
                 updateGameUI();
                 closeModals();
             } else {
@@ -1245,9 +1419,6 @@
                 <li><span>${i+1}. ${u.username}</span> <strong>${u.wins}승</strong></li>
             `).join('');
         });
-
-        socket.on('other_player_moved', (user) => { otherPlayers[user.id] = user; });
-        socket.on('player_left', (id) => { delete otherPlayers[id]; });
 
         document.querySelectorAll('.persistent-hotbar').forEach(hotbarEl => {
             const slots = hotbarEl.querySelectorAll('.hotbar-slot');
