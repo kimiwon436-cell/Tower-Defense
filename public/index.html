@@ -24,6 +24,13 @@
             .screen { max-width: 480px; }
             .game-top-panel { max-width: 480px; font-size: 12px; padding: 4px 6px; }
             #joystickContainer { display: block; }
+            
+            /* 모바일 환경: UI 영역(상단 패널, 핫바 등)을 제외하고 맵 크기를 약 50px 축소 */
+            #gameCanvas {
+                width: calc(100% - 50px) !important;
+                max-width: calc(480px - 50px) !important;
+                height: auto !important;
+            }
         }
 
         @media screen and (min-width: 769px) {
