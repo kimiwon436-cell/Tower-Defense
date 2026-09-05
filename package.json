@@ -13,6 +13,15 @@
   "type": "commonjs",
   "dependencies": {
     "express": "^5.2.1",
+    "firebase": "^12.18.0",
     "socket.io": "^4.8.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kimiwon436-cell/Tower-Defense.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kimiwon436-cell/Tower-Defense/issues"
+  },
+  "homepage": "https://github.com/kimiwon436-cell/Tower-Defense#readme"
 }

@@ -2,7 +2,26 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
-const fs = require('fs');
+
+// 1. 파이어베이스 클라이언트 모듈 불러오기
+const { initializeApp } = require('firebase/app');
+const { getDatabase, ref, get, set } = require('firebase/database');
+
+// 2. 알려주신 파이어베이스 웹 설정 적용
+const firebaseConfig = {
+    apiKey: "AIzaSyBnwTE1Gj5eI4HqtmgbuUXOBHGNxotaS5A",
+    authDomain: "tower-defense-14a58.firebaseapp.com",
+    databaseURL: "https://tower-defense-14a58-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "tower-defense-14a58",
+    storageBucket: "tower-defense-14a58.firebasestorage.app",
+    messagingSenderId: "134914642568",
+    appId: "1:134914642568:web:adf4cb801310ec38aa053d",
+    measurementId: "G-2S2WX67L9X"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getDatabase(firebaseApp);
+const usersRef = ref(db, 'users');
 
 const app = express();
 const server = http.createServer(app);
@@ -10,28 +29,28 @@ const io = new Server(server);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-const userFile = path.join(__dirname, 'users.json');
+let users = {};
 
-function loadUsers() {
-    if (fs.existsSync(userFile)) {
-        try {
-            const data = fs.readFileSync(userFile, 'utf8');
-            return JSON.parse(data);
-        } catch (e) {
-            return {};
-        }
+// 서버가 켜질 때 데이터 불러오기
+get(usersRef).then((snapshot) => {
+    if (snapshot.exists()) {
+        users = snapshot.val();
     }
-    return {};
-}
+    console.log('🔥 Firebase 유저 데이터 로드 완료!');
+}).catch((error) => {
+    console.error(error);
+});
 
+// 데이터 저장 함수
 function saveUsers() {
-    fs.writeFileSync(userFile, JSON.stringify(users, null, 2));
+    set(usersRef, users);
 }
 
-let users = loadUsers();
 const activeUsers = {};
 const parties = {};
 
+// --------------------------------------------------------
+// 여기서부터는 아래의 기존 코드 그대로 유지하시면 됩니다!
 const basicTowers = [
     'Archer', 'Cannon', 'Castle', 'Crystal', 'Electricity', 
     'Fire', 'Galaxy', 'Heal', 'Ice', 'Laser', 
