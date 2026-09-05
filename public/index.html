@@ -30,6 +30,55 @@
             #lobbyCanvas { width: 1080px; height: 720px; }
             #gameCanvas { width: 1080px; height: 720px; }
             #joystickContainer { display: none !important; }
+            
+            /* PC 환경 모달 1.5배 확대 및 여백 축소 */
+            .modal-content {
+                transform: scale(1.5);
+                transform-origin: center;
+                max-width: 320px !important;
+                padding: 6px 8px !important;
+                max-height: 70vh !important;
+            }
+            .modal-content h3 {
+                font-size: 13px !important;
+                padding-bottom: 2px !important;
+                margin-bottom: 4px !important;
+            }
+            .modal-content p, .modal-content label {
+                font-size: 9px !important;
+                margin: 2px 0 !important;
+            }
+            .inventory-grid {
+                max-height: 110px !important;
+            }
+            .summon-left, .ranking-box {
+                max-height: 90px !important;
+            }
+            #partyListContainer {
+                max-height: 60px !important;
+            }
+
+            /* PC 환경 핫바 크기 키우기 */
+            .persistent-hotbar {
+                padding: 6px 8px !important;
+                gap: 6px !important;
+            }
+            .hotbar-slot {
+                width: 54px !important;
+                height: 60px !important;
+                font-size: 11px !important;
+            }
+            .hotbar-slot img {
+                width: 30px !important;
+                height: 30px !important;
+                margin-top: 10px !important;
+            }
+            .hotbar-cost {
+                font-size: 10px !important;
+            }
+            .hotbar-slot > span.slot-num {
+                font-size: 10px !important;
+            }
         }
         
         .persistent-hotbar { display: flex; justify-content: center; gap: 4px; margin-top: 4px; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 6px; width: fit-content; margin-left: auto; margin-right: auto; max-width: 100%; overflow-x: auto; }
@@ -245,7 +294,6 @@
         const gridCols = 27;
         const gridRows = 18;
 
-        // 중복 선언 수정 완료 (1080x720 해상도 기준 모서리 구역 및 플레이어 위치 통일)
         const lobbyPlayer = { x: 520, y: 340, width: 28, height: 38, speed: 4, color: '#ff4081' };
         
         const interactiveZones = [
@@ -838,16 +886,16 @@
                     color: type.color,
                     isBoss: true
                 });
-            } else {
+	    } else {
                 const count = 5 + currentWave * 2;
                 for (let i = 0; i < count; i++) {
                     const type = monsterTypes[Math.floor(Math.random() * monsterTypes.length)];
                     const baseHp = (50 + currentWave * 20) * type.hpMult;
                     const baseSpeed = 1.8 * type.speedMult;
-
+	    
                     enemies.push({
-                        x: currentPathWaypoints[0].x - i * 30,
-                        y: currentPathWaypoints[0].y,
+                        x: currentPathWaypoints[0].x, // 👈 몬스터들이 같은 위치(시작점 X좌표)에 스폰됩니다.
+                        y: currentPathWaypoints[0].y, // 👈 몬스터들이 같은 위치(시작점 Y좌표)에 스폰됩니다.
                         wpIndex: 0,
                         hp: baseHp,
                         maxHp: baseHp,
