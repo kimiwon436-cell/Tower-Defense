@@ -9,67 +9,67 @@
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 2px; }
         ::-webkit-scrollbar-thumb { background: #555; border-radius: 2px; }
 
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #fff; margin: 0; padding: 4px; text-align: center; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; overflow-x: hidden; font-size: 13px; user-select: none; -webkit-user-select: none; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #fff; margin: 0; padding: 2px; text-align: center; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; overflow-x: hidden; font-size: 12px; user-select: none; -webkit-user-select: none; }
         * { box-sizing: border-box; }
         
-        .screen { display: none; width: 100%; max-width: 780px; margin: 0 auto; flex-direction: column; align-items: center; justify-content: center; }
+        /* 모바일 최적화를 위해 최대 너비를 480px로 축소하여 상하가 잘리지 않도록 조정 */
+        .screen { display: none; width: 100%; max-width: 480px; margin: 0 auto; flex-direction: column; align-items: center; justify-content: center; }
         .screen.active { display: flex; }
         
-        /* 가로로 긴 직사각형 캔버스 스타일 */
         canvas { background: #1e1e1e; border: 2px solid #444; cursor: crosshair; display: block; margin: 0 auto; width: 100%; max-width: 100%; height: auto; object-fit: contain; touch-action: none; }
         
-        .persistent-hotbar { display: flex; justify-content: center; gap: 5px; margin-top: 6px; background: rgba(0,0,0,0.4); padding: 5px; border-radius: 8px; width: fit-content; margin-left: auto; margin-right: auto; max-width: 100%; overflow-x: auto; }
-        .hotbar-slot { width: 50px; height: 56px; background: transparent; border: 2px solid #666; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 2px; font-size: 11px; font-weight: bold; cursor: pointer; position: relative; border-radius: 6px; flex-shrink: 0; }
-        .hotbar-slot.active { border-color: #ffd700; box-shadow: 0 0 8px #ffd700; }
-        .hotbar-slot > span.slot-num { position: absolute; top: 2px; left: 3px; font-size: 10px; color: #fff; text-shadow: 1px 1px #000; }
-        .hotbar-slot img { width: 26px; height: 26px; object-fit: contain; margin-top: 10px; }
-        .hotbar-cost { font-size: 10px; color: #ffd700; margin-top: 2px; text-shadow: 1px 1px #000; }
+        .persistent-hotbar { display: flex; justify-content: center; gap: 4px; margin-top: 4px; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 6px; width: fit-content; margin-left: auto; margin-right: auto; max-width: 100%; overflow-x: auto; }
+        .hotbar-slot { width: 42px; height: 48px; background: transparent; border: 2px solid #666; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 2px; font-size: 10px; font-weight: bold; cursor: pointer; position: relative; border-radius: 4px; flex-shrink: 0; }
+        .hotbar-slot.active { border-color: #ffd700; box-shadow: 0 0 6px #ffd700; }
+        .hotbar-slot > span.slot-num { position: absolute; top: 1px; left: 2px; font-size: 9px; color: #fff; text-shadow: 1px 1px #000; }
+        .hotbar-slot img { width: 22px; height: 22px; object-fit: contain; margin-top: 8px; }
+        .hotbar-cost { font-size: 9px; color: #ffd700; margin-top: 1px; text-shadow: 1px 1px #000; }
         
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 100; align-items: center; justify-content: center; padding: 10px; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 100; align-items: center; justify-content: center; padding: 8px; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: #1e88e5; border: 3px solid #0d47a1; padding: 12px; border-radius: 12px; width: 100%; max-width: 450px; text-align: left; box-shadow: 0 0 25px rgba(0,0,0,0.8); position: relative; color: #fff; max-height: 85vh; overflow-y: auto; }
+        .modal-content { background: #1e88e5; border: 2px solid #0d47a1; padding: 10px; border-radius: 10px; width: 100%; max-width: 400px; text-align: left; box-shadow: 0 0 20px rgba(0,0,0,0.8); position: relative; color: #fff; max-height: 80vh; overflow-y: auto; }
         
-        .modal-content h3 { margin-top: 0; color: #fff; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 6px; font-size: 18px; padding-right: 30px; }
-        .close-modal { position: absolute; top: 10px; right: 12px; background: #d32f2f; border: none; color: #fff; font-size: 14px; font-weight: bold; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .modal-content h3 { margin-top: 0; color: #fff; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 4px; font-size: 16px; padding-right: 24px; }
+        .close-modal { position: absolute; top: 8px; right: 10px; background: #d32f2f; border: none; color: #fff; font-size: 12px; font-weight: bold; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        button { background: #2e7d32; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        button { background: #2e7d32; color: #fff; border: none; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; }
         button:hover { background: #388e3c; }
-        input, select { padding: 8px; background: #2c2c2c; border: 2px solid #555; color: #fff; border-radius: 6px; margin: 3px 0; width: 100%; max-width: 100%; font-size: 13px; }
+        input, select { padding: 6px; background: #2c2c2c; border: 2px solid #555; color: #fff; border-radius: 5px; margin: 2px 0; width: 100%; max-width: 100%; font-size: 12px; }
 
-        .inventory-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; max-height: 200px; overflow-y: auto; margin-top: 8px; padding: 5px; background: rgba(0,0,0,0.2); border-radius: 8px; }
-        .inv-item { border: 2px solid #444; padding: 3px; text-align: center; border-radius: 6px; cursor: grab; font-size: 11px; position: relative; color: #000; font-weight: bold; }
+        .inventory-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; max-height: 160px; overflow-y: auto; margin-top: 6px; padding: 4px; background: rgba(0,0,0,0.2); border-radius: 6px; }
+        .inv-item { border: 2px solid #444; padding: 2px; text-align: center; border-radius: 5px; cursor: grab; font-size: 10px; position: relative; color: #000; font-weight: bold; }
         .inv-item:active { cursor: grabbing; }
         .inv-item[draggable="false"] { cursor: not-allowed; opacity: 0.65; }
-        .inv-item img { width: 32px; height: 32px; object-fit: contain; display: block; margin: 0 auto 2px; }
+        .inv-item img { width: 28px; height: 28px; object-fit: contain; display: block; margin: 0 auto 2px; }
         
-        .ranking-container { display: flex; flex-direction: column; gap: 8px; }
-        .ranking-box { width: 100%; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 6px; max-height: 150px; overflow-y: auto; }
-        .ranking-box ul { list-style: none; padding: 0; margin: 0; font-size: 13px; }
-        .ranking-box li { padding: 5px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; }
+        .ranking-container { display: flex; flex-direction: column; gap: 6px; }
+        .ranking-box { width: 100%; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 4px; max-height: 120px; overflow-y: auto; }
+        .ranking-box ul { list-style: none; padding: 0; margin: 0; font-size: 12px; }
+        .ranking-box li { padding: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; }
 
-        .summon-layout { display: flex; flex-direction: column; gap: 8px; }
-        .summon-left { width: 100%; max-height: 150px; overflow-y: auto; }
-        .summon-right { width: 100%; display: flex; flex-direction: column; justify-content: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; text-align: center; }
-        .tier-rate-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 8px; border-radius: 6px; margin-bottom: 5px; font-weight: bold; color: #000; font-size: 12px; }
+        .summon-layout { display: flex; flex-direction: column; gap: 6px; }
+        .summon-left { width: 100%; max-height: 120px; overflow-y: auto; }
+        .summon-right { width: 100%; display: flex; flex-direction: column; justify-content: center; gap: 6px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; text-align: center; }
+        .tier-rate-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; border-radius: 5px; margin-bottom: 4px; font-weight: bold; color: #000; font-size: 11px; }
 
-        .game-top-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; width: 100%; max-width: 780px; margin: 0 auto 4px auto; font-weight: bold; font-size: 13px; background: rgba(255,255,255,0.05); padding: 6px 8px; border-radius: 6px; gap: 4px; }
+        .game-top-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; width: 100%; max-width: 480px; margin: 0 auto 3px auto; font-weight: bold; font-size: 12px; background: rgba(255,255,255,0.05); padding: 4px 6px; border-radius: 5px; gap: 3px; }
 
-        /* 가상 조이스틱 스타일 (가로 직사각형 화면 최적화) */
-        #joystickContainer { display: none; position: absolute; bottom: 15px; left: 15px; width: 100px; height: 100px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3); z-index: 50; touch-action: none; pointer-events: auto; }
+        /* 가상 조이스틱 스타일 크기 축소 */
+        #joystickContainer { display: none; position: absolute; bottom: 10px; left: 10px; width: 80px; height: 80px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3); z-index: 50; touch-action: none; pointer-events: auto; }
         @media (hover: none) and (pointer: coarse) { #joystickContainer { display: block; } }
-        #joystickStick { position: absolute; top: 23px; left: 23px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255, 255, 255, 0.4); border: 2px solid #fff; pointer-events: none; transition: transform 0.05s linear; }
+        #joystickStick { position: absolute; top: 18px; left: 18px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 255, 255, 0.4); border: 2px solid #fff; pointer-events: none; transition: transform 0.05s linear; }
     </style>
 </head>
 <body>
 
     <div id="loginScreen" class="screen active">
-        <h2 style="font-size: 24px; margin: 8px 0;">Tower Defense</h2>
-        <div style="background: #1e1e1e; display: inline-block; padding: 16px; border-radius: 12px; border: 2px solid #444; width: 100%; max-width: 380px;">
-            <div style="margin-bottom: 10px;">
+        <h2 style="font-size: 20px; margin: 6px 0;">Tower Defense</h2>
+        <div style="background: #1e1e1e; display: inline-block; padding: 12px; border-radius: 10px; border: 2px solid #444; width: 100%; max-width: 320px;">
+            <div style="margin-bottom: 8px;">
                 <input type="text" id="usernameInput" placeholder="아이디(닉네임)"><br>
                 <input type="password" id="passwordInput" placeholder="비밀번호">
             </div>
-            <div style="display: flex; gap: 8px; justify-content: center;">
+            <div style="display: flex; gap: 6px; justify-content: center;">
                 <button id="loginBtn" style="background:#1976d2; flex:1;">로그인</button>
                 <button id="signupBtn" style="background:#d81b60; flex:1;">회원가입</button>
             </div>
@@ -77,11 +77,11 @@
     </div>
 
     <div id="lobbyScreen" class="screen" style="position: relative;">
-        <h2 style="font-size: 20px; margin: 6px 0;">메인 로비</h2>
-        <p style="font-size: 13px; margin: 3px 0;">보유 코인: <span id="coinDisplay">0</span>코인 | 승수: <span id="winDisplay">0</span>승</p>
+        <h2 style="font-size: 18px; margin: 4px 0;">메인 로비</h2>
+        <p style="font-size: 12px; margin: 2px 0;">코인: <span id="coinDisplay">0</span> | 승수: <span id="winDisplay">0</span></p>
         
-        <div style="position: relative; display: inline-block; width: 100%; max-width: 750px;">
-            <canvas id="lobbyCanvas" width="750" height="500"></canvas>
+        <div style="position: relative; display: inline-block; width: 100%; max-width: 480px;">
+            <canvas id="lobbyCanvas" width="480" height="480"></canvas>
             <div id="joystickContainer">
                 <div id="joystickStick"></div>
             </div>
@@ -94,7 +94,7 @@
             <div class="hotbar-slot" data-index="3"><span class="slot-num">4</span><img src="assets/images/Ice.png" alt="Ice"><div class="hotbar-cost">120G</div></div>
             <div class="hotbar-slot" data-index="4"><span class="slot-num">5</span><img src="assets/images/Sniper.png" alt="Sniper"><div class="hotbar-cost">250G</div></div>
         </div>
-        <p style="font-size: 11px; color: #aaa; margin: 4px 0;">
+        <p style="font-size: 10px; color: #aaa; margin: 3px 0;">
             🟨 좌상단: 소환소 | 🟩 우상단: 파티 | 🟪 좌하단: 인벤토리 | 🟥 우하단: 랭킹
         </p>
     </div>
@@ -106,27 +106,27 @@
             <div class="summon-layout">
                 <div class="summon-left" id="summonRatesContainer"></div>
                 <div class="summon-right">
-                    <h4 style="margin:0; color:#fff; font-size:15px;">Main Crate</h4>
-                    <button id="pull1Btn" style="background: #2e7d32; padding: 8px; font-size: 14px; width: 100%;">100🪙 Summon 1</button>
-                    <button id="pull10Btn" style="background: #7b1fa2; padding: 8px; font-size: 14px; width: 100%;">900🪙 Summon 10</button>
-                    <p id="poolTimerText" style="font-size: 12px; color: #ffeb3b; margin: 0;">Reseting in 05:00</p>
+                    <h4 style="margin:0; color:#fff; font-size:13px;">Main Crate</h4>
+                    <button id="pull1Btn" style="background: #2e7d32; padding: 6px; font-size: 12px; width: 100%;">100🪙 Summon 1</button>
+                    <button id="pull10Btn" style="background: #7b1fa2; padding: 6px; font-size: 12px; width: 100%;">900🪙 Summon 10</button>
+                    <p id="poolTimerText" style="font-size: 11px; color: #ffeb3b; margin: 0;">Reseting in 05:00</p>
                 </div>
             </div>
-            <p id="summonResultText" style="margin-top: 6px; color: #ffeb3b; font-weight: bold; text-align: center; font-size: 13px;"></p>
+            <p id="summonResultText" style="margin-top: 4px; color: #ffeb3b; font-weight: bold; text-align: center; font-size: 12px;"></p>
         </div>
     </div>
 
     <div id="inventoryModal" class="modal-overlay">
         <div class="modal-content">
             <button class="close-modal" onclick="closeModals()">✕</button>
-            <h3 style="margin:0 0 6px 0;">Units (인벤토리 장착)</h3>
-            <p style="font-size: 12px; margin: 0 0 5px 0;">타워를 드래그해 핫바에 올리면 장착됩니다.</p>
+            <h3 style="margin:0 0 4px 0;">Units (인벤토리 장착)</h3>
+            <p style="font-size: 11px; margin: 0 0 4px 0;">타워를 드래그해 핫바에 올리면 장착됩니다.</p>
             
             <div id="inventoryContainer" class="inventory-grid" ondragover="allowDrop(event)" ondrop="dropToInventory(event)"></div>
             
-            <div style="margin-top: 8px;">
-                <p style="font-size: 12px; margin: 0 0 3px 0;">현재 핫바 슬롯:</p>
-                <div style="display: flex; gap: 4px; justify-content: center;" id="modalHotbarSlots"></div>
+            <div style="margin-top: 6px;">
+                <p style="font-size: 11px; margin: 0 0 2px 0;">현재 핫바 슬롯:</p>
+                <div style="display: flex; gap: 3px; justify-content: center;" id="modalHotbarSlots"></div>
             </div>
         </div>
     </div>
@@ -136,29 +136,29 @@
             <button class="close-modal" onclick="closeModals()">✕</button>
             <h3>파티 및 게임 시작</h3>
             
-            <div style="margin-bottom: 8px;">
-                <label style="font-size: 13px; display: block; margin-bottom: 3px;">난이도 선택:</label>
+            <div style="margin-bottom: 6px;">
+                <label style="font-size: 12px; display: block; margin-bottom: 2px;">난이도 선택:</label>
                 <select id="difficultySelect" style="width: 100%;">
                     <option value="Easy" selected>Easy (쉬움 - 캐시 1500 / 보상 200)</option>
                     <option value="Normal">Normal (보통 - 캐시 1000 / 보상 500)</option>
                     <option value="Hard">Hard (어려움 - 캐시 700 / 보상 1000)</option>
                     <option value="Extreme">Extreme (익스트림 - 캐시 400 / 보상 2000)</option>
                 </select>
-                <button id="createPartyBtn" style="background:#1976d2; width: 100%; margin-top: 5px;">파티 만들기</button>
+                <button id="createPartyBtn" style="background:#1976d2; width: 100%; margin-top: 4px;">파티 만들기</button>
             </div>
 
-            <div id="myPartyBox" style="background:rgba(0,0,0,0.25); padding:8px; border-radius:6px; margin-bottom:8px; display:none;">
-                <h4 style="margin:0 0 3px 0; color:#ffeb3b; font-size:14px;">내 파티 현황</h4>
-                <p id="partyMembersText" style="font-size:12px; margin:0 0 6px 0;"></p>
-                <div style="display:flex; gap:5px;">
-                    <button id="startGameBtn" style="background:#2e7d32; padding:5px 8px; font-size:12px; display:none; flex:1;">게임 시작</button>
-                    <button id="leavePartyBtn" style="background:#d32f2f; padding:5px 8px; font-size:12px; flex:1;">파티 나가기</button>
+            <div id="myPartyBox" style="background:rgba(0,0,0,0.25); padding:6px; border-radius:5px; margin-bottom:6px; display:none;">
+                <h4 style="margin:0 0 2px 0; color:#ffeb3b; font-size:13px;">내 파티 현황</h4>
+                <p id="partyMembersText" style="font-size:11px; margin:0 0 4px 0;"></p>
+                <div style="display:flex; gap:4px;">
+                    <button id="startGameBtn" style="background:#2e7d32; padding:4px 6px; font-size:11px; display:none; flex:1;">게임 시작</button>
+                    <button id="leavePartyBtn" style="background:#d32f2f; padding:4px 6px; font-size:11px; flex:1;">파티 나가기</button>
                 </div>
             </div>
 
-            <h4 style="margin: 6px 0 3px 0; font-size: 14px;">참가 가능한 파티 목록</h4>
-            <div id="partyListContainer" style="max-height: 100px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 6px;">
-                <p style="font-size: 12px; color: #aaa;">현재 생성된 파티가 없습니다.</p>
+            <h4 style="margin: 4px 0 2px 0; font-size: 13px;">참가 가능한 파티 목록</h4>
+            <div id="partyListContainer" style="max-height: 80px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 5px;">
+                <p style="font-size: 11px; color: #aaa;">현재 생성된 파티가 없습니다.</p>
             </div>
         </div>
     </div>
@@ -169,11 +169,11 @@
             <h3 style="margin-top:0;">🏆 실시간 리더보드</h3>
             <div class="ranking-container">
                 <div class="ranking-box">
-                    <h4 style="color: #ffd700; margin-top:0; font-size:15px;">코인 랭킹</h4>
+                    <h4 style="color: #ffd700; margin-top:0; font-size:13px;">코인 랭킹</h4>
                     <ul id="coinRankList"></ul>
                 </div>
                 <div class="ranking-box">
-                    <h4 style="color: #03dac6; margin-top:0; font-size:15px;">승수 랭킹</h4>
+                    <h4 style="color: #03dac6; margin-top:0; font-size:13px;">승수 랭킹</h4>
                     <ul id="winRankList"></ul>
                 </div>
             </div>
@@ -181,10 +181,10 @@
     </div>
 
     <div id="clearModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 380px; text-align: center;">
+        <div class="modal-content" style="max-width: 320px; text-align: center;">
             <h3 style="padding-right: 0;">🎉 게임 클리어!</h3>
-            <p id="clearRewardText" style="font-size: 14px; color: #ffeb3b;"></p>
-            <div style="display: flex; justify-content: center; gap: 8px; margin-top: 12px;">
+            <p id="clearRewardText" style="font-size: 12px; color: #ffeb3b;"></p>
+            <div style="display: flex; justify-content: center; gap: 6px; margin-top: 10px;">
                 <button id="clearLobbyBtn" style="background: #1976d2; flex:1;">로비로 가기</button>
                 <button id="clearRetryBtn" style="background: #2e7d32; flex:1;">다시플레이</button>
             </div>
@@ -192,27 +192,27 @@
     </div>
 
     <div id="upgradeModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 380px; text-align: left;">
+        <div class="modal-content" style="max-width: 320px; text-align: left;">
             <button class="close-modal" onclick="closeModals()">✕</button>
             <h3 id="upgradeTowerTitle" style="margin-top:0;">타워 업그레이드</h3>
-            <div id="upgradeTowerInfo" style="font-size: 13px; line-height: 1.4; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; margin-bottom: 8px;"></div>
-            <button id="upgradeActionBtn" style="background: #2e7d32; width: 100%; padding: 10px; font-size: 15px;">업그레이드</button>
+            <div id="upgradeTowerInfo" style="font-size: 12px; line-height: 1.3; background: rgba(0,0,0,0.3); padding: 6px; border-radius: 5px; margin-bottom: 6px;"></div>
+            <button id="upgradeActionBtn" style="background: #2e7d32; width: 100%; padding: 8px; font-size: 13px;">업그레이드</button>
         </div>
     </div>
 
     <div id="gameScreen" class="screen">
-        <h2 style="font-size: 20px; margin: 6px 0;">인게임</h2>
+        <h2 style="font-size: 18px; margin: 4px 0;">인게임</h2>
         <div class="game-top-panel">
             <div>웨이브: <span id="waveDisplay">1</span>/10</div>
             <div>몬스터: <span id="monsterCountDisplay">0</span></div>
             <div>💰 캐시: <span id="cashDisplay">1000</span></div>
-            <div id="skipButtonsContainer" style="display:flex; gap:3px;">
-                <button id="skipWaveBtn" style="background:#e65100; padding:3px 6px; font-size:11px;">스킵</button>
-                <button id="autoSkipBtn" style="background:#4527a0; padding:3px 6px; font-size:11px;">오토: OFF</button>
+            <div id="skipButtonsContainer" style="display:flex; gap:2px;">
+                <button id="skipWaveBtn" style="background:#e65100; padding:2px 5px; font-size:10px;">스킵</button>
+                <button id="autoSkipBtn" style="background:#4527a0; padding:2px 5px; font-size:10px;">오토: OFF</button>
             </div>
         </div>
 
-        <canvas id="gameCanvas" width="750" height="500"></canvas>
+        <canvas id="gameCanvas" width="480" height="480"></canvas>
 
         <div class="persistent-hotbar" id="gameHotbar">
             <div class="hotbar-slot active" data-index="0"><span class="slot-num">1</span><img src="assets/images/Archer.png" alt="Archer"><div class="hotbar-cost">80G</div></div>
@@ -230,10 +230,10 @@
         let selectedTowerName = 'Archer';
         let selectedHotbarSlotIdx = 0;
         
-        // 가로 직사각형 캔버스 그리드 설정 (750x500 -> 15열 x 10행, 타일 크기 50)
-        const tileSize = 50;
-        const gridCols = 15;
-        const gridRows = 10;
+        // 480x480 정사각형 캔버스 그리드 설정 (12열 x 12행, 타일 크기 40)
+        const tileSize = 40;
+        const gridCols = 12;
+        const gridRows = 12;
 
         const towers = [];
         let selectedTowerInstance = null;
@@ -291,19 +291,19 @@
             { name: '환영의 프리즘', shape: 'polygon', color: '#b19cd9', hpMult: 1.2, speedMult: 1.1 }
         ];
 
-        // 750x500 가로 직사각형 맵에 맞는 웨이포인트 경로 설정 (15열 x 10행 기준)
+        // 480x480 맵에 맞는 웨이포인트 경로 설정 (12열 x 12행 기준)
         const difficultyGridPaths = {
             Easy: [
-                { gx: 1, gy: 0 }, { gx: 1, gy: 8 }, { gx: 13, gy: 8 }, { gx: 13, gy: 1 }
+                { gx: 1, gy: 0 }, { gx: 1, gy: 10 }, { gx: 10, gy: 10 }, { gx: 10, gy: 1 }
             ],
             Normal: [
-                { gx: 0, gy: 1 }, { gx: 7, gy: 1 }, { gx: 7, gy: 8 }, { gx: 14, gy: 8 }
+                { gx: 0, gy: 1 }, { gx: 6, gy: 1 }, { gx: 6, gy: 10 }, { gx: 11, gy: 10 }
             ],
             Hard: [
-                { gx: 0, gy: 0 }, { gx: 4, gy: 0 }, { gx: 4, gy: 6 }, { gx: 10, gy: 6 }, { gx: 10, gy: 2 }, { gx: 14, gy: 2 }
+                { gx: 0, gy: 0 }, { gx: 3, gy: 0 }, { gx: 3, gy: 8 }, { gx: 8, gy: 8 }, { gx: 8, gy: 3 }, { gx: 11, gy: 3 }
             ],
             Extreme: [
-                { gx: 0, gy: 0 }, { gx: 14, gy: 0 }, { gx: 14, gy: 4 }, { gx: 1, gy: 4 }, { gx: 1, gy: 9 }, { gx: 14, gy: 9 }
+                { gx: 0, gy: 0 }, { gx: 11, gy: 0 }, { gx: 11, gy: 5 }, { gx: 1, gy: 5 }, { gx: 1, gy: 11 }, { gx: 11, gy: 11 }
             ]
         };
 
@@ -402,14 +402,14 @@
             updateHotbarsUI();
         }
 
-        const lobbyPlayer = { x: 375, y: 228, width: 32, height: 44, speed: 3.5, color: '#ff4081' };
+        const lobbyPlayer = { x: 240, y: 220, width: 28, height: 38, speed: 3.5, color: '#ff4081' };
         
-        // 가로 직사각형 로비 모서리 구역 설정 (750x500)
+        // 480x480 로비 모서리 구역 설정
         const interactiveZones = [
-            { x: 15, y: 15, width: 80, height: 80, color: '#ffd700', label: 'SUMMON', action: () => openModal('summonModal') },
-            { x: 655, y: 15, width: 80, height: 80, color: '#03dac6', label: 'PARTY', action: () => { socket.emit('get_party_list'); openModal('partyModal'); } },
-            { x: 15, y: 405, width: 80, height: 80, color: '#7c4dff', label: 'UNITS', action: () => { processInventory(); renderInventoryUI(); openModal('inventoryModal'); } },
-            { x: 655, y: 405, width: 80, height: 80, color: '#ff5252', label: 'RANKING', action: () => openModal('rankingModal') }
+            { x: 10, y: 10, width: 70, height: 70, color: '#ffd700', label: 'SUMMON', action: () => openModal('summonModal') },
+            { x: 400, y: 10, width: 70, height: 70, color: '#03dac6', label: 'PARTY', action: () => { socket.emit('get_party_list'); openModal('partyModal'); } },
+            { x: 10, y: 400, width: 70, height: 70, color: '#7c4dff', label: 'UNITS', action: () => { processInventory(); renderInventoryUI(); openModal('inventoryModal'); } },
+            { x: 400, y: 400, width: 70, height: 70, color: '#ff5252', label: 'RANKING', action: () => openModal('rankingModal') }
         ];
 
         let activeModalOpen = false;
@@ -433,7 +433,7 @@
         const joystickContainer = document.getElementById('joystickContainer');
         const joystickStick = document.getElementById('joystickStick');
         let joystickTouchId = null;
-        const joystickRadius = 35;
+        const joystickRadius = 25;
 
         joystickContainer.addEventListener('touchstart', (e) => {
             e.preventDefault();
@@ -493,10 +493,11 @@
                 let vx = 0;
                 let vy = 0;
 
-                if (keys['ArrowUp'] || keys['w']) vy -= 1;
-                if (keys['ArrowDown'] || keys['s']) vy += 1;
-                if (keys['ArrowLeft'] || keys['a']) vx -= 1;
-                if (keys['ArrowRight'] || keys['d']) vx += 1;
+                // WASD 이동 키 적용
+                if (keys['w'] || keys['W']) vy -= 1;
+                if (keys['s'] || keys['S']) vy += 1;
+                if (keys['a'] || keys['A']) vx -= 1;
+                if (keys['d'] || keys['D']) vx += 1;
 
                 if (vx !== 0 || vy !== 0) {
                     const len = Math.hypot(vx, vy);
@@ -522,8 +523,8 @@
                         lobbyPlayer.y + lobbyPlayer.height > zone.y
                     ) {
                         zone.action();
-                        if (zone.x < 200) lobbyPlayer.x += 40;
-                        else lobbyPlayer.x -= 40;
+                        if (zone.x < 200) lobbyPlayer.x += 30;
+                        else lobbyPlayer.x -= 30;
                     }
                 });
             }
@@ -534,19 +535,19 @@
 
         function drawBlockyAvatar(ctx, x, y, w, h, bodyColor, name) {
             ctx.fillStyle = bodyColor;
-            ctx.fillRect(x, y + 12, w, h - 12);
+            ctx.fillRect(x, y + 10, w, h - 10);
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 2;
-            ctx.strokeRect(x, y + 12, w, h - 12);
+            ctx.strokeRect(x, y + 10, w, h - 10);
 
             ctx.fillStyle = '#ffdbac';
-            ctx.fillRect(x + 4, y, w - 8, 14);
-            ctx.strokeRect(x + 4, y, w - 8, 14);
+            ctx.fillRect(x + 3, y, w - 6, 12);
+            ctx.strokeRect(x + 3, y, w - 6, 12);
 
             ctx.fillStyle = '#fff';
-            ctx.font = '11px sans-serif';
+            ctx.font = '10px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText(name, x + w / 2, y - 5);
+            ctx.fillText(name, x + w / 2, y - 4);
             ctx.textAlign = 'left';
         }
 
@@ -569,7 +570,7 @@
                 lobbyCtx.strokeRect(zone.x, zone.y, zone.width, zone.height);
                 
                 lobbyCtx.fillStyle = '#000';
-                lobbyCtx.font = 'bold 12px sans-serif';
+                lobbyCtx.font = 'bold 11px sans-serif';
                 lobbyCtx.textAlign = 'center';
                 lobbyCtx.fillText(zone.label, zone.x + zone.width / 2, zone.y + zone.height / 2 + 4);
                 lobbyCtx.textAlign = 'left';
@@ -590,8 +591,8 @@
             if (container) {
                 container.innerHTML = pool.map(item => `
                     <div class="tier-rate-row" style="background-color: ${item.color};">
-                        <div style="display:flex; align-items:center; gap:5px;">
-                            <img src="assets/images/${item.tower}.png" style="width:24px; height:24px; object-fit:contain; background:#000; border-radius:4px;">
+                        <div style="display:flex; align-items:center; gap:4px;">
+                            <img src="assets/images/${item.tower}.png" style="width:20px; height:20px; object-fit:contain; background:#000; border-radius:3px;">
                             <span>${item.tier}</span>
                         </div>
                         <span>${item.rate}%</span>
@@ -641,9 +642,9 @@
 
                 return `
                     <div class="inv-item" draggable="${!isEquipped}" ondragstart="${isEquipped ? '' : `onDragInventory(event, ${item.originalIndex})`}" style="background-color: ${item.color || '#e6e6e6'};">
-                        ${isEquipped ? '<span style="position:absolute; top:2px; right:2px; background:#d32f2f; color:#fff; font-size:9px; padding:1px 2px; border-radius:3px; font-weight:bold;">V</span>' : ''}
+                        ${isEquipped ? '<span style="position:absolute; top:2px; right:2px; background:#d32f2f; color:#fff; font-size:8px; padding:1px; border-radius:2px; font-weight:bold;">V</span>' : ''}
                         <img src="assets/images/${item.name}.png" alt="${item.name}">
-                        <span style="background:rgba(0,0,0,0.6); color:#fff; padding:1px 2px; border-radius:3px; font-size:9px;">${item.name}</span>
+                        <span style="background:rgba(0,0,0,0.6); color:#fff; padding:1px 2px; border-radius:2px; font-size:8px;">${item.name}</span>
                     </div>
                 `;
             }).join('');
@@ -652,10 +653,10 @@
             hotbarContainer.innerHTML = myData.hotbar.map((name, idx) => {
                 const stats = name ? (towerStats[name] || { cost: 100 }) : null;
                 return `
-                    <div class="hotbar-slot" draggable="${name ? 'true' : 'false'}" ondragstart="onDragHotbar(event, ${idx})" ondragover="allowDrop(event)" ondrop="dropToHotbar(event, ${idx})" style="width:46px; height:52px; background:rgba(0,0,0,0.3);">
+                    <div class="hotbar-slot" draggable="${name ? 'true' : 'false'}" ondragstart="onDragHotbar(event, ${idx})" ondragover="allowDrop(event)" ondrop="dropToHotbar(event, ${idx})" style="width:40px; height:46px; background:rgba(0,0,0,0.3);">
                         <span class="slot-num">${idx+1}</span>
-                        ${name ? `<img src="assets/images/${name}.png" style="width:22px; height:22px; margin-top:8px;">` : ''}
-                        ${stats ? `<div class="hotbar-cost" style="font-size:9px;">${stats.cost}G</div>` : ''}
+                        ${name ? `<img src="assets/images/${name}.png" style="width:20px; height:20px; margin-top:6px;">` : ''}
+                        ${stats ? `<div class="hotbar-cost" style="font-size:8px;">${stats.cost}G</div>` : ''}
                     </div>
                 `;
             }).join('');
@@ -723,16 +724,16 @@
         socket.on('party_list_update', (parties) => {
             const container = document.getElementById('partyListContainer');
             if (parties.length === 0) {
-                container.innerHTML = `<p style="font-size: 12px; color: #aaa;">현재 생성된 파티가 없습니다.</p>`;
+                container.innerHTML = `<p style="font-size: 11px; color: #aaa;">현재 생성된 파티가 없습니다.</p>`;
                 return;
             }
             container.innerHTML = parties.map(p => `
-                <div style="background:rgba(255,255,255,0.08); padding:6px; margin-bottom:3px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="background:rgba(255,255,255,0.08); padding:5px; margin-bottom:2px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
                     <div>
-                        <strong style="font-size:13px;">방장: ${p.host}</strong> | <span style="color:#ffeb3b;">${p.difficulty}</span>
-                        <div style="font-size:11px; color:#aaa;">참가자: ${p.members.join(', ')} (${p.members.length}/4)</div>
+                        <strong style="font-size:12px;">방장: ${p.host}</strong> | <span style="color:#ffeb3b;">${p.difficulty}</span>
+                        <div style="font-size:10px; color:#aaa;">참가자: ${p.members.join(', ')} (${p.members.length}/4)</div>
                     </div>
-                    <button onclick="joinParty('${p.id}')" style="padding:3px 6px; font-size:11px;">참가</button>
+                    <button onclick="joinParty('${p.id}')" style="padding:2px 5px; font-size:10px;">참가</button>
                 </div>
             `).join('');
         });
@@ -838,7 +839,7 @@
                     const baseSpeed = 1.8 * type.speedMult;
 
                     enemies.push({
-                        x: currentPathWaypoints[0].x - i * 35,
+                        x: currentPathWaypoints[0].x - i * 30,
                         y: currentPathWaypoints[0].y,
                         wpIndex: 0,
                         hp: baseHp,
@@ -953,7 +954,7 @@
                 <div><strong>[ 현재 능력치 ]</strong></div>
                 <div>• 데미지: ${tower.damage} | 범위: ${tower.range}</div>
                 <div>• 공속: ${currentAttackSpeed}</div>
-                <hr style="border-color:rgba(255,255,255,0.2); margin:6px 0;">
+                <hr style="border-color:rgba(255,255,255,0.2); margin:4px 0;">
             `;
 
             if (nextStats) {
@@ -962,7 +963,7 @@
                     <div><strong>[ 다음 레벨 (Lv.${nextStats.level}) ]</strong></div>
                     <div>• 데미지: ${nextStats.damage} | 범위: ${nextStats.range}</div>
                     <div>• 공속: ${nextAttackSpeed}</div>
-                    <div style="margin-top:5px; color:#ffeb3b;">업그레이드 비용: ${nextStats.cost}G</div>
+                    <div style="margin-top:4px; color:#ffeb3b;">업그레이드 비용: ${nextStats.cost}G</div>
                 `;
                 document.getElementById('upgradeActionBtn').style.display = 'block';
                 document.getElementById('upgradeActionBtn').innerText = `업그레이드 (${nextStats.cost}G)`;
@@ -1083,12 +1084,12 @@
         function drawShapeMonster(ctx, en) {
             ctx.fillStyle = en.slowTimer > 0 ? '#00bcd4' : en.color;
             ctx.strokeStyle = '#fff';
-            ctx.lineWidth = en.isBoss ? 3 : 2;
+            ctx.lineWidth = en.isBoss ? 2.5 : 1.5;
 
-            const size = en.isBoss ? 22 : 10;
-            const hpBarWidth = en.isBoss ? 45 : 26;
-            const hpBarHeight = en.isBoss ? 5 : 4;
-            const hpBarOffset = en.isBoss ? 30 : 16;
+            const size = en.isBoss ? 18 : 8;
+            const hpBarWidth = en.isBoss ? 35 : 20;
+            const hpBarHeight = en.isBoss ? 4 : 3;
+            const hpBarOffset = en.isBoss ? 24 : 12;
 
             ctx.beginPath();
             if (en.shape === 'circle') {
@@ -1150,11 +1151,11 @@
                     gameCtx.drawImage(img, t.x + 2, t.y + 2, tileSize - 4, tileSize - 4);
                 } else {
                     gameCtx.fillStyle = '#ff5252';
-                    gameCtx.fillRect(t.x + 3, t.y + 3, tileSize - 6, tileSize - 6);
+                    gameCtx.fillRect(t.x + 2, t.y + 2, tileSize - 4, tileSize - 4);
                 }
                 gameCtx.fillStyle = '#ffd700';
-                gameCtx.font = 'bold 11px sans-serif';
-                gameCtx.fillText(`Lv.${t.level}`, t.x + 3, t.y + 14);
+                gameCtx.font = 'bold 10px sans-serif';
+                gameCtx.fillText(`Lv.${t.level}`, t.x + 2, t.y + 12);
             });
 
             if (hoveredTower) {
