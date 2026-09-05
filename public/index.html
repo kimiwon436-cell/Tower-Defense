@@ -12,15 +12,13 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #fff; margin: 0; padding: 2px; text-align: center; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; overflow-x: hidden; font-size: 12px; user-select: none; -webkit-user-select: none; }
         * { box-sizing: border-box; }
         
-	/* 기본 PC 화면 크기 (옆으로 넓힌 720px 크기 적용) */
-        .screen { display: none; width: 100%; max-width: 1100px; margin: 0 auto; flex-direction: column; align-items: center; justify-content: center; }
+        .screen { display: none; width: 100%; max-width: 1150px; margin: 0 auto; flex-direction: column; align-items: center; justify-content: center; }
         .screen.active { display: flex; }
         
         canvas { background: #1e1e1e; border: 2px solid #444; cursor: crosshair; display: block; margin: 0 auto; width: 100%; max-width: 100%; height: auto; object-fit: contain; touch-action: none; }
         
-        .game-top-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; width: 100%; max-width: 720px; margin: 0 auto 5px auto; font-weight: bold; font-size: 14px; background: rgba(255,255,255,0.05); padding: 6px 10px; border-radius: 6px; gap: 5px; }
+        .game-top-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; width: 100%; max-width: 1080px; margin: 0 auto 5px auto; font-weight: bold; font-size: 14px; background: rgba(255,255,255,0.05); padding: 6px 10px; border-radius: 6px; gap: 5px; }
 
-        /* 모바일 기기(너비 768px 이하): PC용으로 넓힌 크기(720px)에서 1.5배 줄인 480px로 축소 */
         @media screen and (max-width: 768px) {
             body { font-size: 12px; padding: 2px; }
             .screen { max-width: 480px; }
@@ -28,10 +26,9 @@
             #joystickContainer { display: block; }
         }
 
-        /* PC 화면(너비 769px 이상)에서는 옆으로 넓힌 720x480 해상도 적용 */
         @media screen and (min-width: 769px) {
-            #lobbyCanvas { width: 720px; height: 480px; }
-            #gameCanvas { width: 720px; height: 480px; }
+            #lobbyCanvas { width: 1080px; height: 720px; }
+            #gameCanvas { width: 1080px; height: 720px; }
             #joystickContainer { display: none !important; }
         }
         
@@ -69,9 +66,6 @@
         .summon-right { width: 100%; display: flex; flex-direction: column; justify-content: center; gap: 6px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; text-align: center; }
         .tier-rate-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; border-radius: 5px; margin-bottom: 4px; font-weight: bold; color: #000; font-size: 11px; }
 
-        .game-top-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; width: 100%; max-width: 480px; margin: 0 auto 3px auto; font-weight: bold; font-size: 12px; background: rgba(255,255,255,0.05); padding: 4px 6px; border-radius: 5px; gap: 3px; }
-
-        /* 가상 조이스틱 스타일 크기 축소 */
         #joystickContainer { display: none; position: absolute; bottom: 10px; left: 10px; width: 80px; height: 80px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3); z-index: 50; touch-action: none; pointer-events: auto; }
         @media (hover: none) and (pointer: coarse) { #joystickContainer { display: block; } }
         #joystickStick { position: absolute; top: 18px; left: 18px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 255, 255, 0.4); border: 2px solid #fff; pointer-events: none; transition: transform 0.05s linear; }
@@ -96,13 +90,13 @@
     <div id="lobbyScreen" class="screen" style="position: relative;">
         <h2 style="font-size: 18px; margin: 4px 0;">메인 로비</h2>
         <p style="font-size: 12px; margin: 2px 0;">코인: <span id="coinDisplay">0</span> | 승수: <span id="winDisplay">0</span></p>
-
-	<div style="position: relative; display: inline-block; width: 100%; max-width: 720px;">
-    		<canvas id="lobbyCanvas" width="720" height="480"></canvas>
-    		<div id="joystickContainer">
-        		<div id="joystickStick"></div>
-    		</div>
-	</div>
+        
+        <div style="position: relative; display: inline-block; width: 100%; max-width: 1080px;">
+            <canvas id="lobbyCanvas" width="1080" height="720"></canvas>
+            <div id="joystickContainer">
+                <div id="joystickStick"></div>
+            </div>
+        </div>
 
         <div class="persistent-hotbar" id="persistentHotbar">
             <div class="hotbar-slot active" data-index="0"><span class="slot-num">1</span><img src="assets/images/Archer.png" alt="Archer"><div class="hotbar-cost">80G</div></div>
@@ -229,7 +223,7 @@
             </div>
         </div>
 
-        <canvas id="gameCanvas" width="720" height="480"></canvas>
+        <canvas id="gameCanvas" width="1080" height="720"></canvas>
 
         <div class="persistent-hotbar" id="gameHotbar">
             <div class="hotbar-slot active" data-index="0"><span class="slot-num">1</span><img src="assets/images/Archer.png" alt="Archer"><div class="hotbar-cost">80G</div></div>
@@ -247,10 +241,19 @@
         let selectedTowerName = 'Archer';
         let selectedHotbarSlotIdx = 0;
         
-        // 480x480 정사각형 캔버스 그리드 설정 (12열 x 12행, 타일 크기 40)
         const tileSize = 40;
-        const gridCols = 18;
-        const gridRows = 12;
+        const gridCols = 27;
+        const gridRows = 18;
+
+        // 중복 선언 수정 완료 (1080x720 해상도 기준 모서리 구역 및 플레이어 위치 통일)
+        const lobbyPlayer = { x: 520, y: 340, width: 28, height: 38, speed: 4, color: '#ff4081' };
+        
+        const interactiveZones = [
+            { x: 15, y: 15, width: 80, height: 80, color: '#ffd700', label: 'SUMMON', action: () => openModal('summonModal') },
+            { x: 985, y: 15, width: 80, height: 80, color: '#03dac6', label: 'PARTY', action: () => { socket.emit('get_party_list'); openModal('partyModal'); } },
+            { x: 15, y: 625, width: 80, height: 80, color: '#7c4dff', label: 'UNITS', action: () => { processInventory(); renderInventoryUI(); openModal('inventoryModal'); } },
+            { x: 985, y: 625, width: 80, height: 80, color: '#ff5252', label: 'RANKING', action: () => openModal('rankingModal') }
+        ];
 
         const towers = [];
         let selectedTowerInstance = null;
@@ -308,19 +311,18 @@
             { name: '환영의 프리즘', shape: 'polygon', color: '#b19cd9', hpMult: 1.2, speedMult: 1.1 }
         ];
 
-        // 480x480 맵에 맞는 웨이포인트 경로 설정 (12열 x 12행 기준)
         const difficultyGridPaths = {
             Easy: [
-                { gx: 1, gy: 0 }, { gx: 1, gy: 10 }, { gx: 10, gy: 10 }, { gx: 10, gy: 1 }
+                { gx: 1, gy: 0 }, { gx: 1, gy: 15 }, { gx: 25, gy: 15 }, { gx: 25, gy: 2 }
             ],
             Normal: [
-                { gx: 0, gy: 1 }, { gx: 6, gy: 1 }, { gx: 6, gy: 10 }, { gx: 11, gy: 10 }
+                { gx: 0, gy: 2 }, { gx: 13, gy: 2 }, { gx: 13, gy: 15 }, { gx: 26, gy: 15 }
             ],
             Hard: [
-                { gx: 0, gy: 0 }, { gx: 3, gy: 0 }, { gx: 3, gy: 8 }, { gx: 8, gy: 8 }, { gx: 8, gy: 3 }, { gx: 11, gy: 3 }
+                { gx: 0, gy: 0 }, { gx: 6, gy: 0 }, { gx: 6, gy: 12 }, { gx: 18, gy: 12 }, { gx: 18, gy: 4 }, { gx: 26, gy: 4 }
             ],
             Extreme: [
-                { gx: 0, gy: 0 }, { gx: 11, gy: 0 }, { gx: 11, gy: 5 }, { gx: 1, gy: 5 }, { gx: 1, gy: 11 }, { gx: 11, gy: 11 }
+                { gx: 0, gy: 0 }, { gx: 26, gy: 0 }, { gx: 26, gy: 8 }, { gx: 2, gy: 8 }, { gx: 2, gy: 16 }, { gx: 26, gy: 16 }
             ]
         };
 
@@ -419,16 +421,6 @@
             updateHotbarsUI();
         }
 
-        const lobbyPlayer = { x: 240, y: 220, width: 28, height: 38, speed: 3.5, color: '#ff4081' };
-        
-        // 480x480 로비 모서리 구역 설정
-        const interactiveZones = [
-            { x: 10, y: 10, width: 70, height: 70, color: '#ffd700', label: 'SUMMON', action: () => openModal('summonModal') },
-            { x: 400, y: 10, width: 70, height: 70, color: '#03dac6', label: 'PARTY', action: () => { socket.emit('get_party_list'); openModal('partyModal'); } },
-            { x: 10, y: 400, width: 70, height: 70, color: '#7c4dff', label: 'UNITS', action: () => { processInventory(); renderInventoryUI(); openModal('inventoryModal'); } },
-            { x: 400, y: 400, width: 70, height: 70, color: '#ff5252', label: 'RANKING', action: () => openModal('rankingModal') }
-        ];
-
         let activeModalOpen = false;
         function openModal(modalId) {
             if (activeModalOpen) return;
@@ -445,7 +437,6 @@
         window.addEventListener('keydown', (e) => { keys[e.key] = true; });
         window.addEventListener('keyup', (e) => { keys[e.key] = false; });
 
-        // 가상 조이스틱 로직
         let joystickVector = { x: 0, y: 0 };
         const joystickContainer = document.getElementById('joystickContainer');
         const joystickStick = document.getElementById('joystickStick');
@@ -510,7 +501,6 @@
                 let vx = 0;
                 let vy = 0;
 
-                // WASD 이동 키 적용
                 if (keys['w'] || keys['W']) vy -= 1;
                 if (keys['s'] || keys['S']) vy += 1;
                 if (keys['a'] || keys['A']) vx -= 1;
