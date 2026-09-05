@@ -12,10 +12,10 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #fff; margin: 0; padding: 4px; text-align: center; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; overflow-x: hidden; font-size: 13px; user-select: none; -webkit-user-select: none; }
         * { box-sizing: border-box; }
         
-        .screen { display: none; width: 100%; max-width: 500px; margin: 0 auto; flex-direction: column; align-items: center; justify-content: center; }
+        .screen { display: none; width: 100%; max-width: 780px; margin: 0 auto; flex-direction: column; align-items: center; justify-content: center; }
         .screen.active { display: flex; }
         
-        /* 세로로 긴 직사각형 캔버스 스타일 */
+        /* 가로로 긴 직사각형 캔버스 스타일 */
         canvas { background: #1e1e1e; border: 2px solid #444; cursor: crosshair; display: block; margin: 0 auto; width: 100%; max-width: 100%; height: auto; object-fit: contain; touch-action: none; }
         
         .persistent-hotbar { display: flex; justify-content: center; gap: 5px; margin-top: 6px; background: rgba(0,0,0,0.4); padding: 5px; border-radius: 8px; width: fit-content; margin-left: auto; margin-right: auto; max-width: 100%; overflow-x: auto; }
@@ -52,9 +52,9 @@
         .summon-right { width: 100%; display: flex; flex-direction: column; justify-content: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; text-align: center; }
         .tier-rate-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 8px; border-radius: 6px; margin-bottom: 5px; font-weight: bold; color: #000; font-size: 12px; }
 
-        .game-top-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; width: 100%; max-width: 500px; margin: 0 auto 4px auto; font-weight: bold; font-size: 13px; background: rgba(255,255,255,0.05); padding: 6px 8px; border-radius: 6px; gap: 4px; }
+        .game-top-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; width: 100%; max-width: 780px; margin: 0 auto 4px auto; font-weight: bold; font-size: 13px; background: rgba(255,255,255,0.05); padding: 6px 8px; border-radius: 6px; gap: 4px; }
 
-        /* 가상 조이스틱 스타일 (세로 직사각형 화면 최적화) */
+        /* 가상 조이스틱 스타일 (가로 직사각형 화면 최적화) */
         #joystickContainer { display: none; position: absolute; bottom: 15px; left: 15px; width: 100px; height: 100px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3); z-index: 50; touch-action: none; pointer-events: auto; }
         @media (hover: none) and (pointer: coarse) { #joystickContainer { display: block; } }
         #joystickStick { position: absolute; top: 23px; left: 23px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255, 255, 255, 0.4); border: 2px solid #fff; pointer-events: none; transition: transform 0.05s linear; }
@@ -80,10 +80,8 @@
         <h2 style="font-size: 20px; margin: 6px 0;">메인 로비</h2>
         <p style="font-size: 13px; margin: 3px 0;">보유 코인: <span id="coinDisplay">0</span>코인 | 승수: <span id="winDisplay">0</span>승</p>
         
-        <div style="position: relative; display: inline-block; width: 100%; max-width: 500px;">
-            <!-- 세로 직사각형 캔버스 (500x750) -->
-            <canvas id="lobbyCanvas" width="500" height="750"></canvas>
-            <!-- 가상 조이스틱 UI -->
+        <div style="position: relative; display: inline-block; width: 100%; max-width: 750px;">
+            <canvas id="lobbyCanvas" width="750" height="500"></canvas>
             <div id="joystickContainer">
                 <div id="joystickStick"></div>
             </div>
@@ -97,7 +95,7 @@
             <div class="hotbar-slot" data-index="4"><span class="slot-num">5</span><img src="assets/images/Sniper.png" alt="Sniper"><div class="hotbar-cost">250G</div></div>
         </div>
         <p style="font-size: 11px; color: #aaa; margin: 4px 0;">
-            🟨 상단: 소환소/파티 | 🟩 하단: 인벤토리/랭킹
+            🟨 좌상단: 소환소 | 🟩 우상단: 파티 | 🟪 좌하단: 인벤토리 | 🟥 우하단: 랭킹
         </p>
     </div>
 
@@ -214,8 +212,7 @@
             </div>
         </div>
 
-        <!-- 세로 직사각형 인게임 캔버스 (500x750) -->
-        <canvas id="gameCanvas" width="500" height="750"></canvas>
+        <canvas id="gameCanvas" width="750" height="500"></canvas>
 
         <div class="persistent-hotbar" id="gameHotbar">
             <div class="hotbar-slot active" data-index="0"><span class="slot-num">1</span><img src="assets/images/Archer.png" alt="Archer"><div class="hotbar-cost">80G</div></div>
@@ -233,10 +230,10 @@
         let selectedTowerName = 'Archer';
         let selectedHotbarSlotIdx = 0;
         
-        // 세로 직사각형 캔버스 그리드 설정 (500x750 -> 10열 x 15행, 타일 크기 50)
+        // 가로 직사각형 캔버스 그리드 설정 (750x500 -> 15열 x 10행, 타일 크기 50)
         const tileSize = 50;
-        const gridCols = 10;
-        const gridRows = 15;
+        const gridCols = 15;
+        const gridRows = 10;
 
         const towers = [];
         let selectedTowerInstance = null;
@@ -294,19 +291,19 @@
             { name: '환영의 프리즘', shape: 'polygon', color: '#b19cd9', hpMult: 1.2, speedMult: 1.1 }
         ];
 
-        // 500x750 세로 직사각형 맵에 맞는 웨이포인트 경로 설정 (10열 x 15행 기준)
+        // 750x500 가로 직사각형 맵에 맞는 웨이포인트 경로 설정 (15열 x 10행 기준)
         const difficultyGridPaths = {
             Easy: [
-                { gx: 0, gy: 1 }, { gx: 8, gy: 1 }, { gx: 8, gy: 13 }, { gx: 1, gy: 13 }
+                { gx: 1, gy: 0 }, { gx: 1, gy: 8 }, { gx: 13, gy: 8 }, { gx: 13, gy: 1 }
             ],
             Normal: [
-                { gx: 0, gy: 1 }, { gx: 8, gy: 1 }, { gx: 8, gy: 7 }, { gx: 1, gy: 7 }, { gx: 1, gy: 13 }, { gx: 9, gy: 13 }
+                { gx: 0, gy: 1 }, { gx: 7, gy: 1 }, { gx: 7, gy: 8 }, { gx: 14, gy: 8 }
             ],
             Hard: [
-                { gx: 0, gy: 0 }, { gx: 5, gy: 0 }, { gx: 5, gy: 4 }, { gx: 2, gy: 4 }, { gx: 2, gy: 9 }, { gx: 8, gy: 9 }, { gx: 8, gy: 14 }
+                { gx: 0, gy: 0 }, { gx: 4, gy: 0 }, { gx: 4, gy: 6 }, { gx: 10, gy: 6 }, { gx: 10, gy: 2 }, { gx: 14, gy: 2 }
             ],
             Extreme: [
-                { gx: 0, gy: 0 }, { gx: 8, gy: 0 }, { gx: 8, gy: 3 }, { gx: 1, gy: 3 }, { gx: 1, gy: 8 }, { gx: 8, gy: 8 }, { gx: 8, gy: 13 }, { gx: 0, gy: 13 }
+                { gx: 0, gy: 0 }, { gx: 14, gy: 0 }, { gx: 14, gy: 4 }, { gx: 1, gy: 4 }, { gx: 1, gy: 9 }, { gx: 14, gy: 9 }
             ]
         };
 
@@ -405,13 +402,14 @@
             updateHotbarsUI();
         }
 
-        const lobbyPlayer = { x: 225, y: 350, width: 32, height: 44, speed: 3.5, color: '#ff4081' };
-        // 세로 직사각형 로비 모서리 구역 설정
+        const lobbyPlayer = { x: 375, y: 228, width: 32, height: 44, speed: 3.5, color: '#ff4081' };
+        
+        // 가로 직사각형 로비 모서리 구역 설정 (750x500)
         const interactiveZones = [
             { x: 15, y: 15, width: 80, height: 80, color: '#ffd700', label: 'SUMMON', action: () => openModal('summonModal') },
-            { x: 405, y: 15, width: 80, height: 80, color: '#03dac6', label: 'PARTY', action: () => { socket.emit('get_party_list'); openModal('partyModal'); } },
-            { x: 15, y: 655, width: 80, height: 80, color: '#7c4dff', label: 'UNITS', action: () => { processInventory(); renderInventoryUI(); openModal('inventoryModal'); } },
-            { x: 405, y: 655, width: 80, height: 80, color: '#ff5252', label: 'RANKING', action: () => openModal('rankingModal') }
+            { x: 655, y: 15, width: 80, height: 80, color: '#03dac6', label: 'PARTY', action: () => { socket.emit('get_party_list'); openModal('partyModal'); } },
+            { x: 15, y: 405, width: 80, height: 80, color: '#7c4dff', label: 'UNITS', action: () => { processInventory(); renderInventoryUI(); openModal('inventoryModal'); } },
+            { x: 655, y: 405, width: 80, height: 80, color: '#ff5252', label: 'RANKING', action: () => openModal('rankingModal') }
         ];
 
         let activeModalOpen = false;
@@ -524,7 +522,7 @@
                         lobbyPlayer.y + lobbyPlayer.height > zone.y
                     ) {
                         zone.action();
-                        if (zone.x < 150) lobbyPlayer.x += 40;
+                        if (zone.x < 200) lobbyPlayer.x += 40;
                         else lobbyPlayer.x -= 40;
                     }
                 });
